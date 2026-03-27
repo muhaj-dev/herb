@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST \"https://stitch.googleapis.com/mcp\" -H \"Content-Type: application/json\" -H \"X-Goog-Api-Key: AQ.Ab8RN6KwWrevHhROikdY6hbQVnHEMDFbv10jlLL2xitBHLTt4Q\" -d '{\"\"\"\"jsonrpc\"\"\"\":\"\"\"\"2.0\"\"\"\",\"\"\"\"id\"\"\"\":1,\"\"\"\"method\"\"\"\":\"\"\"\"tools/list\"\"\"\",\"\"\"\"params\"\"\"\":{}}')",
+      "Bash(curl -s -X POST \"https://stitch.googleapis.com/mcp\" -H \"Content-Type: application/json\" -H \"X-Goog-Api-Key: AQ.Ab8RN6KwWrevHhROikdY6hbQVnHEMDFbv10jlLL2xitBHLTt4Q\" -d '{\"\"jsonrpc\"\":\"\"2.0\"\",\"\"id\"\":2,\"\"method\"\":\"\"tools/call\"\",\"\"params\"\":{\"\"name\"\":\"\"list_projects\"\",\"\"arguments\"\":{}}}')",
+      "Bash(curl -s -X POST \"https://stitch.googleapis.com/mcp\" -H \"Content-Type: application/json\" -H \"X-Goog-Api-Key: AQ.Ab8RN6KwWrevHhROikdY6hbQVnHEMDFbv10jlLL2xitBHLTt4Q\" -d '{\"\"\"\"jsonrpc\"\"\"\":\"\"\"\"2.0\"\"\"\",\"\"\"\"id\"\"\"\":2,\"\"\"\"method\"\"\"\":\"\"\"\"tools/call\"\"\"\",\"\"\"\"params\"\"\"\":{\"\"\"\"name\"\"\"\":\"\"\"\"list_projects\"\"\"\",\"\"\"\"arguments\"\"\"\":{}}}')",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -s -X POST \"https://stitch.googleapis.com/mcp\" -H \"Content-Type: application/json\" -H \"X-Goog-Api-Key: AQ.Ab8RN6KwWrevHhROikdY6hbQVnHEMDFbv10jlLL2xitBHLTt4Q\" -d '{\"\"\"\"jsonrpc\"\"\"\":\"\"\"\"2.0\"\"\"\",\"\"\"\"id\"\"\"\":3,\"\"\"\"method\"\"\"\":\"\"\"\"tools/call\"\"\"\",\"\"\"\"params\"\"\"\":{\"\"\"\"name\"\"\"\":\"\"\"\"list_screens\"\"\"\",\"\"\"\"arguments\"\"\"\":{\"\"\"\"project\"\"\"\":\"\"\"\"projects/5130194646015309167\"\"\"\"}}}')"
+    ]
+  }
+}
+
+
