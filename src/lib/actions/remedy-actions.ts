@@ -12,6 +12,9 @@ function slugify(text: string): string {
 
 export async function createRemedy(formData: {
   name: string;
+  scientific_name?: string;
+  type?: string;
+  prep_time?: string;
   short_description?: string;
   disease_ids?: string[];
   preparation_steps?: string;
@@ -31,6 +34,9 @@ export async function createRemedy(formData: {
     .insert({
       name: formData.name,
       slug: slugify(formData.name),
+      scientific_name: formData.scientific_name || null,
+      type: formData.type || null,
+      prep_time: formData.prep_time || null,
       short_description: formData.short_description || null,
       description: formData.short_description || null,
       preparation_steps: formData.preparation_steps || null,
@@ -71,6 +77,9 @@ export async function updateRemedy(
   id: string,
   updates: {
     name?: string;
+    scientific_name?: string;
+    type?: string;
+    prep_time?: string;
     short_description?: string;
     preparation_steps?: string;
     ingredients?: { name: string; quantity: string }[];

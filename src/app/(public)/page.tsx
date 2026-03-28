@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCategories } from "@/lib/queries/categories";
 import { getFeaturedRemedies } from "@/lib/queries/remedies";
 import HeroSearch from "./_components/HeroSearch";
+import NewsletterForm from "./_components/NewsletterForm";
 
 const colorMap: Record<string, { bg: string; text: string }> = {
   blue: { bg: "bg-blue-50", text: "text-blue-600" },
@@ -206,16 +207,7 @@ export default async function HomePage() {
             remedy guides, herb spotlights, and wellness advice directly to your
             inbox.
           </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              className="flex-1 rounded-lg border border-outline-variant/20 bg-surface-container-lowest focus:border-primary focus:ring-primary text-on-surface"
-              placeholder="Enter your email address"
-              type="email"
-            />
-            <button className="bg-primary text-on-primary font-bold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-              Subscribe
-            </button>
-          </form>
+          <NewsletterForm />
         </div>
       </section>
     </>

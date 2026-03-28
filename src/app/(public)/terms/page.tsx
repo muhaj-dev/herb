@@ -73,9 +73,9 @@ export default function TermsPage() {
                   While we provide information, nothing replaces a certified
                   practitioner.
                 </p>
-                <button className="w-full py-2 px-4 bg-surface border border-outline-variant/20 rounded-lg text-sm font-semibold text-on-surface/70 hover:bg-surface-container-low transition-colors">
+                <a href="/contact" className="block w-full py-2 px-4 bg-surface border border-outline-variant/20 rounded-lg text-sm font-semibold text-on-surface/70 hover:bg-surface-container-low transition-colors text-center">
                   Find a Practitioner
-                </button>
+                </a>
               </div>
             </div>
           </aside>

@@ -3,21 +3,18 @@ import Link from "next/link";
 const footerLinks = {
   Explore: [
     { href: "/remedies", label: "Browse Herbs" },
-    { href: "/conditions", label: "Symptom Checker" },
-    { href: "#", label: "Ayurveda" },
-    { href: "#", label: "TCM" },
+    { href: "/conditions", label: "Browse Conditions" },
+    { href: "/safety", label: "Safety Guide" },
   ],
   Company: [
     { href: "/about", label: "About Us" },
-    { href: "#", label: "Expert Board" },
-    { href: "#", label: "Careers" },
-    { href: "#", label: "Contact" },
+    { href: "/contact", label: "Contact" },
+    { href: "/faq", label: "FAQ" },
   ],
   Legal: [
-    { href: "#", label: "Privacy Policy" },
-    { href: "/terms", label: "Terms of Service" },
-    { href: "#", label: "Medical Disclaimer" },
-    { href: "#", label: "Cookie Policy" },
+    { href: "/terms#privacy-policy", label: "Privacy Policy" },
+    { href: "/terms#terms-of-use", label: "Terms of Service" },
+    { href: "/terms#medical-disclaimer", label: "Medical Disclaimer" },
   ],
 };
 
@@ -40,18 +37,10 @@ export default function Footer() {
               Connecting you with nature&apos;s pharmacy. Discover holistic
               healing traditions backed by modern research.
             </p>
-            <div className="flex gap-4">
-              {["public", "share", "rss_feed"].map((icon) => (
-                <a
-                  key={icon}
-                  href="#"
-                  className="text-on-surface/30 hover:text-primary transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {icon}
-                  </span>
-                </a>
-              ))}
+            <div className="flex gap-4 text-on-surface/30">
+              <span className="material-symbols-outlined text-[20px]">public</span>
+              <span className="material-symbols-outlined text-[20px]">share</span>
+              <span className="material-symbols-outlined text-[20px]">rss_feed</span>
             </div>
           </div>
 

@@ -13,6 +13,9 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState("");
+  const [scientificName, setScientificName] = useState("");
+  const [type, setType] = useState("");
+  const [prepTime, setPrepTime] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [selectedDiseaseIds, setSelectedDiseaseIds] = useState<string[]>([]);
   const [preparationSteps, setPreparationSteps] = useState("");
@@ -55,6 +58,9 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
     startTransition(async () => {
       const result = await createRemedy({
         name: name.trim(),
+        scientific_name: scientificName.trim() || undefined,
+        type: type || undefined,
+        prep_time: prepTime.trim() || undefined,
         short_description: shortDescription.trim() || undefined,
         disease_ids: selectedDiseaseIds,
         preparation_steps: preparationSteps.trim() || undefined,
@@ -154,6 +160,62 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2" htmlFor="scientific-name">
+                      Scientific Name
+                    </label>
+                    <input
+                      className={inputCls}
+                      id="scientific-name"
+                      placeholder="e.g. Curcuma longa"
+                      type="text"
+                      value={scientificName}
+                      onChange={(e) => setScientificName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2" htmlFor="type">
+                      Type
+                    </label>
+                    <div className="relative">
+                      <select
+                        className={`${inputCls} appearance-none cursor-pointer`}
+                        id="type"
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}
+                      >
+                        <option value="">Select Type</option>
+                        <option value="Herb">Herb</option>
+                        <option value="Root">Root</option>
+                        <option value="Spice">Spice</option>
+                        <option value="Flower">Flower</option>
+                        <option value="Bark">Bark</option>
+                        <option value="Leaf">Leaf</option>
+                        <option value="Seed">Seed</option>
+                        <option value="Berry">Berry</option>
+                        <option value="Mushroom">Mushroom</option>
+                        <option value="Essential Oil">Essential Oil</option>
+                        <option value="Tincture">Tincture</option>
+                        <option value="Tea">Tea</option>
+                      </select>
+                      <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2" htmlFor="prep-time">
+                      Prep Time
+                    </label>
+                    <input
+                      className={inputCls}
+                      id="prep-time"
+                      placeholder="e.g. 15 minutes"
+                      type="text"
+                      value={prepTime}
+                      onChange={(e) => setPrepTime(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label

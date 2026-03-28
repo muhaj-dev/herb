@@ -16,6 +16,8 @@ export async function createDisease(formData: {
   category: string;
   symptoms: string[];
   description: string;
+  icon?: string;
+  hero_image?: string;
   status: boolean;
   is_featured: boolean;
   remedy_ids?: string[];
@@ -34,6 +36,8 @@ export async function createDisease(formData: {
       description: formData.description
         ? formData.description.split("\n\n").filter(Boolean)
         : [],
+      icon: formData.icon || null,
+      hero_image: formData.hero_image || null,
       status: formData.status ? "Active" : "Draft",
       is_featured: formData.is_featured,
     } as any)

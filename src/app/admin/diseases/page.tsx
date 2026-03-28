@@ -1,8 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getDiseases } from "@/lib/queries/diseases";
-import DeleteDiseaseButton from "./_components/DeleteDiseaseButton";
-import Pagination, { PER_PAGE } from "../_components/Pagination";
+import DiseaseTable from "./_components/DiseaseTable";
 
 export const metadata: Metadata = {
   title: "Disease Inventory - Herbal Admin",
@@ -33,13 +32,7 @@ const categoryGradientMap: Record<string, string> = {
 // Categories are derived from actual disease data
 
 
-export default async function DiseaseInventoryPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const { page } = await searchParams;
-  const currentPage = Math.max(1, Number(page ?? "1"));
+export default async function DiseaseInventoryPage() {
   const rawDiseases = await getDiseases();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,149 +116,7 @@ export default async function DiseaseInventoryPage({
             </Link>
           </div>
 
-          {/* Search & Filters */}
-          <div className="mt-3 sm:mt-6 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between rounded-xl sm:rounded-2xl bg-[#162e1b] p-3 sm:p-4 border border-white/5">
-            <div className="relative w-full lg:max-w-md">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[#13ec37]">
-                <span className="material-symbols-outlined">search</span>
-              </div>
-              <input
-                className="block w-full rounded-lg border-none bg-[#234829]/50 py-3 pl-12 pr-4 text-white placeholder-[#13ec37]/60 focus:ring-2 focus:ring-[#13ec37] focus:bg-[#234829] transition-all"
-                placeholder="Search diseases or remedies..."
-                type="text"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="group flex items-center gap-2 rounded-lg bg-[#13ec37] px-4 py-2 text-sm font-bold text-[#102213]">
-                All ({diseases.length})
-              </span>
-            </div>
-          </div>
-
-          {/* ── Data Table ── */}
-          <div className="rounded-2xl border border-white/5 bg-[#162e1b] overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-white/10 bg-white/5 text-xs uppercase text-slate-400">
-                  <tr>
-                    <th className="px-6 py-4 font-bold tracking-wider">
-                      Disease Name
-                    </th>
-                    <th className="px-6 py-4 font-bold tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-4 font-bold tracking-wider">
-                      Remedies
-                    </th>
-                    <th className="px-6 py-4 font-bold tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 font-bold tracking-wider text-right">
-                      Last Updated
-                    </th>
-                    <th className="px-6 py-4 font-bold tracking-wider text-right">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {diseases.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE).map((disease) => (
-                    <tr
-                      key={disease.id}
-                      className="group hover:bg-[#1c3b22] transition-colors"
-                    >
-                      {/* Name */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Link
-                          href={`/admin/diseases/${disease.slug}`}
-                          className="flex items-center gap-3"
-                        >
-                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/10">
-                            <div
-                              className={`w-full h-full bg-gradient-to-br ${disease.gradient}`}
-                            />
-                          </div>
-                          <div>
-                            <div className="font-bold text-white group-hover:text-[#13ec37] transition-colors">
-                              {disease.name}
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              ID: #{disease.id}
-                            </div>
-                          </div>
-                        </Link>
-                      </td>
-                      {/* Category */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border ${disease.categoryColor}`}
-                        >
-                          {disease.category}
-                        </span>
-                      </td>
-                      {/* Remedies */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex -space-x-2 overflow-hidden">
-                          {disease.remedies.map((r) => (
-                            <div
-                              key={r.initial}
-                              className="inline-block h-6 w-6 rounded-full bg-slate-700 ring-2 ring-[#162e1b] flex items-center justify-center text-[10px] text-white font-bold"
-                              title={r.title}
-                            >
-                              {r.initial}
-                            </div>
-                          ))}
-                          {disease.extra > 0 && (
-                            <div className="inline-block h-6 w-6 rounded-full bg-slate-500 ring-2 ring-[#162e1b] flex items-center justify-center text-[10px] text-white font-bold">
-                              +{disease.extra}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      {/* Status */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <span className="relative flex h-2.5 w-2.5">
-                            {disease.ping && (
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#13ec37] opacity-75" />
-                            )}
-                            <span
-                              className={`relative inline-flex rounded-full h-2.5 w-2.5 ${disease.statusColor}`}
-                            />
-                          </span>
-                          <span className="text-white">{disease.status}</span>
-                        </div>
-                      </td>
-                      {/* Last Updated */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-slate-400">
-                        {disease.lastUpdated}
-                      </td>
-                      {/* Actions */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/admin/diseases/${disease.slug}`}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
-                            title="Edit"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">
-                              edit
-                            </span>
-                          </Link>
-                          <DeleteDiseaseButton
-                            diseaseId={disease.id}
-                            diseaseName={disease.name}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <Pagination totalItems={diseases.length} currentPage={currentPage} basePath="/admin/diseases" />
-          </div>
+          <DiseaseTable diseases={diseases} />
         </div>
       </div>
     </>

@@ -8,6 +8,9 @@ const navLinks = [
   { href: "/admin", icon: "dashboard", label: "Dashboard" },
   { href: "/admin/diseases", icon: "coronavirus", label: "Diseases" },
   { href: "/admin/remedies", icon: "science", label: "Remedies" },
+  { href: "/admin/conditions", icon: "health_and_safety", label: "Conditions" },
+  { href: "/admin/categories", icon: "category", label: "Categories" },
+  { href: "/admin/team", icon: "diversity_3", label: "Team" },
   { href: "/admin/users", icon: "group", label: "Users" },
   { href: "/admin/settings", icon: "settings", label: "Settings" },
 ];

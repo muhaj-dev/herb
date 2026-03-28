@@ -217,9 +217,12 @@ export default function SafetyGuidePage() {
               >
                 Book Specialist Consultation
               </Link>
-              <button className="border border-white/30 px-6 md:px-8 py-3 md:py-4 rounded-lg font-bold hover:bg-white/10 transition-colors">
+              <Link
+                href="/contact"
+                className="border border-white/30 px-6 md:px-8 py-3 md:py-4 rounded-lg font-bold hover:bg-white/10 transition-colors"
+              >
                 Emergency Protocols
-              </button>
+              </Link>
             </div>
           </div>
           <div className="w-full md:w-1/3 bg-primary p-8 md:p-12 flex flex-col justify-center border-t md:border-t-0 md:border-l border-white/10">

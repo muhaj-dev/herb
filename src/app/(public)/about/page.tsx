@@ -170,9 +170,9 @@ export default async function AboutPage() {
                   <Image src={member.image} alt={member.name} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                     <div className="flex gap-2">
-                      <button className="size-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur text-white flex items-center justify-center transition-colors">
+                      <Link href="/contact" className="size-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur text-white flex items-center justify-center transition-colors">
                         <span className="material-symbols-outlined text-sm">mail</span>
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -197,9 +197,9 @@ export default async function AboutPage() {
             <Link href="/remedies" className="px-8 py-3 bg-white text-primary font-bold rounded-full hover:bg-surface-container-low transition-colors shadow-lg">
               Browse Apothecary
             </Link>
-            <button className="px-8 py-3 bg-transparent border-2 border-white/30 text-white font-bold rounded-full hover:bg-white/10 transition-colors">
-              Join Workshops
-            </button>
+            <Link href="/contact" className="px-8 py-3 bg-transparent border-2 border-white/30 text-white font-bold rounded-full hover:bg-white/10 transition-colors">
+              Get in Touch
+            </Link>
           </div>
         </div>
       </section>

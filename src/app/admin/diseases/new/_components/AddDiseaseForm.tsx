@@ -25,6 +25,8 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [scientificName, setScientificName] = useState("");
+  const [icon, setIcon] = useState("");
+  const [heroImage, setHeroImage] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
@@ -72,6 +74,8 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
         category,
         symptoms,
         description: description.trim(),
+        icon: icon.trim() || undefined,
+        hero_image: heroImage.trim() || undefined,
         status,
         is_featured: isFeatured,
         remedy_ids: selectedRemedyIds,
@@ -207,6 +211,49 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
                       type="text"
                       value={scientificName}
                       onChange={(e) => setScientificName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Icon & Hero Image */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label
+                      className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
+                      htmlFor="icon"
+                    >
+                      Icon (Material Symbol name)
+                    </label>
+                    <div className="flex gap-3 items-center">
+                      <input
+                        className="w-full bg-[#112214] border border-[#234829] rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all"
+                        id="icon"
+                        placeholder="e.g. respiratory"
+                        type="text"
+                        value={icon}
+                        onChange={(e) => setIcon(e.target.value)}
+                      />
+                      {icon && (
+                        <span className="material-symbols-outlined text-[#13ec37] text-2xl shrink-0">
+                          {icon}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
+                      htmlFor="hero-image"
+                    >
+                      Hero Image URL
+                    </label>
+                    <input
+                      className="w-full bg-[#112214] border border-[#234829] rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all"
+                      id="hero-image"
+                      placeholder="https://example.com/image.jpg"
+                      type="url"
+                      value={heroImage}
+                      onChange={(e) => setHeroImage(e.target.value)}
                     />
                   </div>
                 </div>
