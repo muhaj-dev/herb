@@ -24,8 +24,7 @@ export async function createDisease(formData: {
 }): Promise<{ id: string } | { error: string }> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: disease, error } = (await supabase
+  const { data: disease, error } = await supabase
     .from("diseases")
     .insert({
       name: formData.name,
@@ -40,9 +39,9 @@ export async function createDisease(formData: {
       hero_image: formData.hero_image || null,
       status: formData.status ? "Active" : "Draft",
       is_featured: formData.is_featured,
-    } as any)
+    } as Record<string, unknown>)
     .select("id")
-    .single()) as { data: { id: string } | null; error: any };
+    .single();
 
   if (error) {
     console.error("[createDisease] Supabase error:", error);
@@ -55,8 +54,7 @@ export async function createDisease(formData: {
       remedy_id: rid,
       tag: null,
     }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: linkError } = await supabase.from("disease_remedy").insert(links as any);
+    const { error: linkError } = await supabase.from("disease_remedy").insert(links);
     if (linkError) console.error("[createDisease] Remedy link error:", linkError);
   }
 
@@ -77,7 +75,7 @@ export async function updateDisease(
     symptoms?: string[];
     tags?: string[];
   }
-) {
+): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = { ...updates };
@@ -85,57 +83,66 @@ export async function updateDisease(
     updateData.slug = slugify(updates.name);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from("diseases")
-    .update(updateData as any)
+    .update(updateData as Record<string, unknown>)
     .eq("id", id);
 
-  if (error) throw error;
+  if (error) {
+    return { error: error.message ?? "Failed to update disease." };
+  }
 
   revalidatePath("/admin/diseases");
   revalidatePath(`/admin/diseases/${id}`);
   revalidatePath("/admin");
+  return { success: true };
 }
 
 export async function updateDiseaseRemedies(
   diseaseId: string,
   remedyIds: string[]
-) {
+): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
 
-  // Remove all existing links
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: deleteError } = await supabase
     .from("disease_remedy")
     .delete()
     .eq("disease_id", diseaseId);
-  if (deleteError) throw deleteError;
+  if (deleteError) {
+    return { error: deleteError.message ?? "Failed to update remedy links." };
+  }
 
-  // Insert new links
   if (remedyIds.length > 0) {
     const links = remedyIds.map((rid) => ({
       disease_id: diseaseId,
       remedy_id: rid,
       tag: null,
     }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: insertError } = await supabase
       .from("disease_remedy")
-      .insert(links as any);
-    if (insertError) throw insertError;
+      .insert(links);
+    if (insertError) {
+      return { error: insertError.message ?? "Failed to link remedies." };
+    }
   }
 
   revalidatePath("/admin/diseases");
   revalidatePath(`/admin/diseases`);
   revalidatePath("/admin");
+  return { success: true };
 }
 
-export async function deleteDisease(id: string) {
+export async function deleteDisease(
+  id: string
+): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
   const { error } = await supabase.from("diseases").delete().eq("id", id);
-  if (error) throw error;
+
+  if (error) {
+    return { error: error.message ?? "Failed to delete disease." };
+  }
 
   revalidatePath("/admin/diseases");
   revalidatePath("/admin");
+  return { success: true };
 }

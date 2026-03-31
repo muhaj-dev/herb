@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(npx next:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(ls -la /c/Users/USER/Documents/Projects/herbalw/src/app/\\\\\\(public\\\\\\)/)",
+      "Bash(cat /c/Users/USER/Documents/Projects/herbalw/src/app/'\\(public\\)'/page.tsx)",
+      "Bash(xargs wc:*)",
+      "Bash(git -C /c/Users/USER/Documents/Projects/herbalw log --oneline)",
+      "Bash(npm list:*)",
+      "Bash(sed 's/\"\"\"\".*//')",
+      "Bash(node -e \"const fs = require\\(''fs''\\); const tsconfig = JSON.parse\\(fs.readFileSync\\(''/c/Users/USER/Documents/Projects/herbalw/tsconfig.json'', ''utf8''\\)\\); console.log\\(JSON.stringify\\(tsconfig.compilerOptions.paths, null, 2\\)\\)\")",
+      "Read(//c/Users/USER/AppData/Local/Temp/claude/c--Users-USER-Documents-Projects-herbalw/5d42104f-6bca-40ba-8a48-b60ff6992c32/tasks//**)",
+      "Read(//c/Users/USER/AppData/Local/Temp/claude/c--Users-USER-Documents-Projects-herbalw/5d42104f-6bca-40ba-8a48-b60ff6992c32/tasks/**)"
     ]
   }
 }

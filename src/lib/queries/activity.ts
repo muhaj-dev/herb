@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import type { ActivityLog } from "@/lib/supabase/types";
 
-export async function getRecentActivity(limit = 10) {
+type ActivityWithUser = ActivityLog & {
+  user: { id: string; name: string; avatar_url: string | null } | null;
+};
+
+export async function getRecentActivity(limit = 10): Promise<ActivityWithUser[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("activity_log")
@@ -11,6 +16,5 @@ export async function getRecentActivity(limit = 10) {
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data ?? []) as any[];
+  return (data ?? []) as ActivityWithUser[];
 }

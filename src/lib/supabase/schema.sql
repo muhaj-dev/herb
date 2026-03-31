@@ -143,6 +143,25 @@ CREATE TABLE site_settings (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Contact Messages
+CREATE TABLE contact_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Newsletter Subscribers
+CREATE TABLE newsletter_subscribers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  subscribed_at TIMESTAMPTZ DEFAULT now(),
+  is_active BOOLEAN DEFAULT true
+);
+
 -- =============================================
 -- RLS Policies (open for now — no auth)
 -- =============================================
@@ -156,6 +175,8 @@ ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "allow_all" ON categories FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "allow_all" ON conditions FOR ALL USING (true) WITH CHECK (true);
@@ -167,6 +188,8 @@ CREATE POLICY "allow_all" ON team_members FOR ALL USING (true) WITH CHECK (true)
 CREATE POLICY "allow_all" ON profiles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "allow_all" ON activity_log FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "allow_all" ON site_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "allow_all" ON contact_messages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "allow_all" ON newsletter_subscribers FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================
 -- Auto-update updated_at

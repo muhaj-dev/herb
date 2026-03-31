@@ -1,5 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Condition } from "@/lib/supabase/types";
+import type { Condition, Remedy } from "@/lib/supabase/types";
+
+type ConditionWithRemedies = Condition & {
+  condition_remedy: {
+    display_order: number;
+    icons: { icon: string; title: string }[];
+    remedy: Remedy;
+  }[];
+};
 
 export async function getConditions(): Promise<Condition[]> {
   const supabase = await createClient();
@@ -11,7 +19,7 @@ export async function getConditions(): Promise<Condition[]> {
   return (data ?? []) as Condition[];
 }
 
-export async function getConditionBySlug(slug: string) {
+export async function getConditionBySlug(slug: string): Promise<ConditionWithRemedies> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("conditions")
@@ -26,6 +34,5 @@ export async function getConditionBySlug(slug: string) {
     .eq("slug", slug)
     .single();
   if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data as any;
+  return data as ConditionWithRemedies;
 }

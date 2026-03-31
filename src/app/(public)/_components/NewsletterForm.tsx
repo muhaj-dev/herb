@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { subscribeNewsletter } from "@/lib/actions/newsletter-actions";
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
-    setSubmitted(true);
-    setEmail("");
+    setError(null);
+    startTransition(async () => {
+      const result = await subscribeNewsletter(email);
+      if ("error" in result) {
+        setError(result.error);
+      } else {
+        setSubmitted(true);
+        setEmail("");
+      }
+    });
   }
 
   if (submitted) {
@@ -32,22 +43,28 @@ export default function NewsletterForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+      className="flex flex-col gap-3 max-w-md mx-auto"
     >
-      <input
-        className="flex-1 rounded-lg border border-outline-variant/20 bg-surface-container-lowest focus:border-primary focus:ring-primary text-on-surface"
-        placeholder="Enter your email address"
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button
-        type="submit"
-        className="bg-primary text-on-primary font-bold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-      >
-        Subscribe
-      </button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          className="flex-1 rounded-lg border border-outline-variant/20 bg-surface-container-lowest focus:border-primary focus:ring-primary text-on-surface"
+          placeholder="Enter your email address"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button
+          type="submit"
+          disabled={isPending}
+          className="bg-primary text-on-primary font-bold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50"
+        >
+          {isPending ? "Subscribing..." : "Subscribe"}
+        </button>
+      </div>
+      {error && (
+        <p className="text-red-600 text-sm text-center">{error}</p>
+      )}
     </form>
   );
 }

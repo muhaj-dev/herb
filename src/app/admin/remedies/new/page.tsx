@@ -8,10 +8,9 @@ export const metadata: Metadata = {
 
 export default async function AddNewRemedyPage() {
   const rawDiseases = await getDiseases();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const diseases = rawDiseases.map((d: any) => ({
-    id: d.id as string,
-    name: d.name as string,
+  const diseases = rawDiseases.map((d) => ({
+    id: d.id,
+    name: d.name,
   }));
   return <AddRemedyForm diseases={diseases} />;
 }

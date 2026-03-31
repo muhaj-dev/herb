@@ -10,31 +10,32 @@ export default async function ConditionDetailPage({
 }) {
   const { slug } = await params;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let data: any;
+  let disease;
   try {
-    data = await getDiseaseBySlug(slug);
+    disease = await getDiseaseBySlug(slug);
   } catch {
     notFound();
   }
 
-  if (!data || data.status !== "Active") notFound();
+  if (!disease || disease.status !== "Active") notFound();
 
-  const description: string[] = Array.isArray(data.description)
-    ? data.description
-    : data.description
-      ? [data.description]
-      : [];
-  const symptoms: string[] = data.symptoms ?? [];
-  const remedies = (data.disease_remedy ?? []).map((dr: any) => ({
-    id: dr.remedy.id as string,
-    name: dr.remedy.name as string,
-    scientific: (dr.remedy.scientific_name ?? "") as string,
-    slug: dr.remedy.slug as string,
-    type: (dr.remedy.type ?? "Herbal") as string,
-    prepTime: (dr.remedy.prep_time ?? "") as string,
-    desc: (dr.remedy.description ?? dr.remedy.short_description ?? "") as string,
-    image: dr.remedy.image as string | null,
+  const data = {
+    name: disease.name,
+    category: disease.category ?? "",
+    icon: disease.icon ?? "local_hospital",
+    description: Array.isArray(disease.description) ? disease.description : [],
+    symptoms: disease.symptoms ?? [],
+  };
+
+  const remedies = disease.disease_remedy.map((dr) => ({
+    id: dr.remedy.id,
+    name: dr.remedy.name,
+    scientific: dr.remedy.scientific_name ?? "",
+    slug: dr.remedy.slug,
+    type: dr.remedy.type ?? "Herbal",
+    prepTime: dr.remedy.prep_time ?? "",
+    desc: dr.remedy.description ?? dr.remedy.short_description ?? "",
+    image: dr.remedy.image,
   }));
 
   return (
@@ -64,12 +65,12 @@ export default async function ConditionDetailPage({
               <h1 className="text-4xl md:text-5xl font-serif font-bold text-text-main flex items-center gap-4">
                 {data.name}
                 <span className="material-symbols-outlined text-4xl text-primary/60">
-                  {data.icon ?? "local_hospital"}
+                  {data.icon}
                 </span>
               </h1>
-              {description.length > 0 && (
+              {data.description.length > 0 && (
                 <div className="mt-4 text-lg text-on-surface/50 max-w-2xl space-y-3">
-                  {description.map((p: string, i: number) => (
+                  {data.description.map((p: string, i: number) => (
                     <p key={i}>{p}</p>
                   ))}
                 </div>
@@ -80,7 +81,7 @@ export default async function ConditionDetailPage({
       </section>
 
       {/* ── Symptoms ── */}
-      {symptoms.length > 0 && (
+      {data.symptoms.length > 0 && (
         <section className="py-10 px-4 bg-surface border-b border-outline-variant/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-xl font-serif font-bold text-text-main mb-6 flex items-center gap-2">
@@ -88,7 +89,7 @@ export default async function ConditionDetailPage({
               Common Symptoms
             </h2>
             <div className="flex flex-wrap gap-3">
-              {symptoms.map((symptom: string) => (
+              {data.symptoms.map((symptom: string) => (
                 <span
                   key={symptom}
                   className="inline-flex items-center gap-2 bg-surface-container-lowest border border-outline-variant/20 px-4 py-2 rounded-lg text-sm text-on-surface/70"
@@ -117,7 +118,7 @@ export default async function ConditionDetailPage({
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {remedies.map((remedy: any) => (
+              {remedies.map((remedy) => (
                 <article
                   key={remedy.id}
                   className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full group overflow-hidden"

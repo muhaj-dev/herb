@@ -12,8 +12,7 @@ export async function createTeamMember(formData: {
 }): Promise<{ id: string } | { error: string }> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = (await supabase
+  const { data, error } = await supabase
     .from("team_members")
     .insert({
       name: formData.name,
@@ -21,9 +20,9 @@ export async function createTeamMember(formData: {
       bio: formData.bio || null,
       image: formData.image || null,
       display_order: formData.display_order ?? 0,
-    } as any)
+    } as Record<string, unknown>)
     .select("id")
-    .single()) as { data: { id: string } | null; error: any };
+    .single();
 
   if (error) {
     console.error("[createTeamMember] Supabase error:", error);
@@ -47,10 +46,9 @@ export async function updateTeamMember(
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from("team_members")
-    .update(updates as any)
+    .update(updates as Record<string, unknown>)
     .eq("id", id);
 
   if (error) {

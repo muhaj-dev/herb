@@ -15,16 +15,18 @@ export async function updateSettings(
     currency?: string;
     timezone?: string;
   }
-) {
+): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from("site_settings")
-    .update(updates as any)
+    .update(updates as Record<string, unknown>)
     .eq("id", id);
 
-  if (error) throw error;
+  if (error) {
+    return { error: error.message ?? "Failed to update settings." };
+  }
 
   revalidatePath("/admin/settings");
+  return { success: true };
 }

@@ -24,8 +24,7 @@ export async function createCondition(formData: {
 }): Promise<{ id: string } | { error: string }> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = (await supabase
+  const { data, error } = await supabase
     .from("conditions")
     .insert({
       name: formData.name,
@@ -38,9 +37,9 @@ export async function createCondition(formData: {
       safety_note: formData.safety_note || null,
       safety_link: formData.safety_link || null,
       category_id: formData.category_id || null,
-    } as any)
+    } as Record<string, unknown>)
     .select("id")
-    .single()) as { data: { id: string } | null; error: any };
+    .single();
 
   if (error) {
     console.error("[createCondition] Supabase error:", error);
@@ -74,10 +73,9 @@ export async function updateCondition(
     updateData.slug = slugify(updates.name);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from("conditions")
-    .update(updateData as any)
+    .update(updateData as Record<string, unknown>)
     .eq("id", id);
 
   if (error) {

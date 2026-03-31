@@ -14,8 +14,7 @@ export default async function RemedyDetailPage({
 }) {
   const { slug } = await params;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let remedy: any;
+  let remedy;
   try {
     remedy = await getRemedyBySlug(slug);
   } catch {

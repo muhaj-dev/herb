@@ -12,16 +12,15 @@ export const metadata: Metadata = {
 export default async function ConditionsPage() {
   const diseases = await getPublicDiseases();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const conditions = diseases.map((d: any) => ({
-    name: d.name as string,
-    slug: d.slug as string,
-    desc: Array.isArray(d.description) ? d.description.join(" ") : (d.description ?? ""),
-    remedyCount: (d.disease_remedy ?? []).length,
+  const conditions = diseases.map((d) => ({
+    name: d.name,
+    slug: d.slug,
+    desc: Array.isArray(d.description) ? d.description.join(" ") : "",
+    remedyCount: d.disease_remedy.length,
     icon: d.icon ?? "local_hospital",
-    category: (d.category ?? "") as string,
+    category: d.category ?? "",
     image: d.hero_image ?? null,
-    symptoms: (d.symptoms ?? []) as string[],
+    symptoms: d.symptoms ?? [],
   }));
 
   return (

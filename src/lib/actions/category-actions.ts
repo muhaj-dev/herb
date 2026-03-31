@@ -19,8 +19,7 @@ export async function createCategory(formData: {
 }): Promise<{ id: string } | { error: string }> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = (await supabase
+  const { data, error } = await supabase
     .from("categories")
     .insert({
       name: formData.name,
@@ -28,9 +27,9 @@ export async function createCategory(formData: {
       icon: formData.icon || null,
       color: formData.color || null,
       display_order: formData.display_order ?? 0,
-    } as any)
+    } as Record<string, unknown>)
     .select("id")
-    .single()) as { data: { id: string } | null; error: any };
+    .single();
 
   if (error) {
     console.error("[createCategory] Supabase error:", error);
@@ -59,10 +58,9 @@ export async function updateCategory(
     updateData.slug = slugify(updates.name);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from("categories")
-    .update(updateData as any)
+    .update(updateData as Record<string, unknown>)
     .eq("id", id);
 
   if (error) {

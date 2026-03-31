@@ -5,10 +5,7 @@ import { updateSettings } from "@/lib/actions/settings-actions";
 import type { SiteSettings } from "@/lib/supabase/types";
 
 const settingsTabs = [
-  { id: "general", icon: "tune", label: "General", active: true },
-  { id: "account", icon: "person", label: "Account", active: false },
-  { id: "notifications", icon: "notifications", label: "Notifications", active: false },
-  { id: "security", icon: "security", label: "Security", active: false },
+  { id: "general", icon: "tune", label: "General" },
 ];
 export default function SettingsForm({ settings }: { settings: SiteSettings }) {
   const [isPending, startTransition] = useTransition();
@@ -51,11 +48,7 @@ export default function SettingsForm({ settings }: { settings: SiteSettings }) {
                 <a
                   key={tab.id}
                   href={`#${tab.id}`}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 whitespace-nowrap lg:whitespace-normal transition-all ${
-                    tab.active
-                      ? "bg-[#13ec37]/10 text-[#13ec37] border-[#13ec37]"
-                      : "text-[#92c99b] hover:bg-[#1a331e] hover:text-white border-transparent"
-                  }`}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 whitespace-nowrap lg:whitespace-normal transition-all bg-[#13ec37]/10 text-[#13ec37] border-[#13ec37]"
                 >
                   <span className="material-symbols-outlined">{tab.icon}</span>
                   <span className="font-bold text-sm">{tab.label}</span>

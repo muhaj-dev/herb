@@ -28,8 +28,7 @@ export async function createRemedy(formData: {
 }): Promise<{ id: string } | { error: string }> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: remedy, error } = (await supabase
+  const { data: remedy, error } = await supabase
     .from("remedies")
     .insert({
       name: formData.name,
@@ -47,9 +46,9 @@ export async function createRemedy(formData: {
       precautions: formData.precautions || null,
       is_active: formData.is_active,
       is_featured: formData.is_featured,
-    } as any)
+    } as Record<string, unknown>)
     .select("id")
-    .single()) as { data: { id: string } | null; error: any };
+    .single();
 
   if (error) {
     console.error("[createRemedy] Supabase error:", error);
@@ -62,8 +61,7 @@ export async function createRemedy(formData: {
       remedy_id: remedy.id,
       tag: null,
     }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: linkError } = await supabase.from("disease_remedy").insert(links as any);
+    const { error: linkError } = await supabase.from("disease_remedy").insert(links);
     if (linkError) console.error("[createRemedy] Disease link error:", linkError);
   }
 
@@ -97,10 +95,9 @@ export async function updateRemedy(
     updateData.slug = slugify(updates.name);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from("remedies")
-    .update(updateData as any)
+    .update(updateData as Record<string, unknown>)
     .eq("id", id);
 
   if (error) {

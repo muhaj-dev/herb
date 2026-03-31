@@ -1,6 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Disease } from "@/lib/supabase/types";
 
-export async function getDiseases() {
+type DiseaseWithRemedies = Disease & {
+  disease_remedy: { tag: string | null; remedy: { id: string; name: string; slug: string } }[];
+};
+
+type DiseaseWithFullRemedies = Disease & {
+  disease_remedy: {
+    tag: string | null;
+    remedy: {
+      id: string; name: string; slug: string; scientific_name: string | null;
+      type: string | null; prep_time: string | null; description: string | null;
+      short_description: string | null; image: string | null;
+    };
+  }[];
+};
+
+export async function getDiseases(): Promise<DiseaseWithRemedies[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("diseases")
@@ -13,11 +29,10 @@ export async function getDiseases() {
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data ?? []) as any[];
+  return (data ?? []) as DiseaseWithRemedies[];
 }
 
-export async function getPublicDiseases() {
+export async function getPublicDiseases(): Promise<DiseaseWithRemedies[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("diseases")
@@ -30,11 +45,10 @@ export async function getPublicDiseases() {
     .eq("status", "Active")
     .order("name");
   if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data ?? []) as any[];
+  return (data ?? []) as DiseaseWithRemedies[];
 }
 
-export async function getDiseaseBySlug(slug: string) {
+export async function getDiseaseBySlug(slug: string): Promise<DiseaseWithFullRemedies> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("diseases")
@@ -48,6 +62,5 @@ export async function getDiseaseBySlug(slug: string) {
     .eq("slug", slug)
     .single();
   if (error) throw error;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data as any;
+  return data as DiseaseWithFullRemedies;
 }

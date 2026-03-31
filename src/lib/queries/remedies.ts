@@ -66,6 +66,7 @@ export async function getConditionsForRemedy(
     .select("condition:conditions(name, slug)")
     .eq("remedy_id", remedyId);
   if (error) return [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data ?? []).map((row: any) => row.condition).filter(Boolean);
+  return (data ?? [])
+    .map((row) => (row as Record<string, unknown>).condition as { name: string; slug: string })
+    .filter(Boolean);
 }

@@ -35,17 +35,16 @@ const categoryGradientMap: Record<string, string> = {
 export default async function DiseaseInventoryPage() {
   const rawDiseases = await getDiseases();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const diseases = rawDiseases.map((d: any) => {
-    const diseaseRemedies = (d.disease_remedy ?? []) as { remedy: { name: string } }[];
+  const diseases = rawDiseases.map((d) => {
+    const diseaseRemedies = d.disease_remedy;
     const allRemedies = diseaseRemedies.map((dr) => ({
       initial: dr.remedy.name.charAt(0).toUpperCase(),
       title: dr.remedy.name,
     }));
     const shown = allRemedies.slice(0, 2);
     const extra = Math.max(0, allRemedies.length - 2);
-    const category = (d.category as string) ?? "Respiratory";
-    const status = (d.status as string) ?? "Draft";
+    const category = d.category ?? "Respiratory";
+    const status = d.status ?? "Draft";
     const { statusColor, ping } = statusColorMap[status] ?? {
       statusColor: "bg-slate-500",
       ping: false,

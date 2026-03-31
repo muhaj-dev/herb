@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-
-// export const metadata not possible in client components — see layout or head approach
-// For SEO, use generateMetadata in a parent layout or a separate head.tsx
+import { useState, useTransition, type FormEvent } from "react";
+import { submitContactForm } from "@/lib/actions/contact-actions";
 
 const contactInfo = [
   {
@@ -42,11 +40,21 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
-    setFormData({ name: "", email: "", subject: "", message: "" });
+    setError(null);
+    startTransition(async () => {
+      const result = await submitContactForm(formData);
+      if ("error" in result) {
+        setError(result.error);
+      } else {
+        setSubmitted(true);
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      }
+    });
   }
 
   return (
@@ -138,6 +146,23 @@ export default function ContactPage() {
 
             {/* Right: Form */}
             <div className="lg:col-span-7">
+              {error && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3">
+                  <span className="material-symbols-outlined text-red-500">
+                    error
+                  </span>
+                  <p className="text-red-700 text-sm">{error}</p>
+                  <button
+                    onClick={() => setError(null)}
+                    className="ml-auto text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      close
+                    </span>
+                  </button>
+                </div>
+              )}
+
               {submitted && (
                 <div className="mb-6 p-4 rounded-xl bg-secondary-container/50 border border-primary/20 flex items-center gap-3">
                   <span className="material-symbols-outlined text-primary">
@@ -257,9 +282,10 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-8 py-3 gradient-primary text-white font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+                  disabled={isPending}
+                  className="w-full sm:w-auto px-8 py-3 gradient-primary text-white font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg disabled:opacity-50"
                 >
-                  Send Message
+                  {isPending ? "Sending..." : "Send Message"}
                 </button>
               </form>
             </div>
