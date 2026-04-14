@@ -46,6 +46,19 @@ export async function getDiseases(): Promise<DiseaseWithRemedies[]> {
   return (data ?? []) as DiseaseWithRemedies[];
 }
 
+export async function getFeaturedDiseases(): Promise<Disease[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("diseases")
+    .select("*")
+    .eq("status", "Active")
+    .eq("is_featured", true)
+    .order("created_at", { ascending: false })
+    .limit(6);
+  if (error) throw error;
+  return (data ?? []) as Disease[];
+}
+
 export async function getPublicDiseases(): Promise<DiseaseWithRemedies[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

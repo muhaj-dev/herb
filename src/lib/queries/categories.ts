@@ -47,6 +47,61 @@ export async function getCategoriesWithDiseaseCount(): Promise<
   }));
 }
 
+export async function getCategoriesWithDiseases(): Promise<
+  (Category & { diseases: Disease[] })[]
+> {
+  const supabase = await createClient();
+  const { data: cats, error: e1 } = await supabase
+    .from("categories")
+    .select("*")
+    .order("display_order");
+  if (e1) throw new Error(`[categories] ${e1.code} ${e1.message}`);
+
+  const { data: conds, error: e2 } = await supabase
+    .from("conditions")
+    .select("id, category_id, condition_diseases(disease_id)");
+  if (e2) throw new Error(`[categories] ${e2.code} ${e2.message}`);
+
+  const categoryToDiseaseIds = new Map<string, Set<string>>();
+  for (const row of (conds ?? []) as Array<{
+    category_id: string | null;
+    condition_diseases: { disease_id: string }[] | null;
+  }>) {
+    if (!row.category_id) continue;
+    const set = categoryToDiseaseIds.get(row.category_id) ?? new Set<string>();
+    for (const cd of row.condition_diseases ?? []) set.add(cd.disease_id);
+    categoryToDiseaseIds.set(row.category_id, set);
+  }
+
+  const allIds = Array.from(
+    new Set(
+      Array.from(categoryToDiseaseIds.values()).flatMap((s) => Array.from(s))
+    )
+  );
+
+  let diseasesById = new Map<string, Disease>();
+  if (allIds.length > 0) {
+    const { data: diseases, error: e3 } = await supabase
+      .from("diseases")
+      .select("*")
+      .in("id", allIds)
+      .eq("status", "Active")
+      .order("name");
+    if (e3) throw new Error(`[categories] ${e3.code} ${e3.message}`);
+    diseasesById = new Map(
+      ((diseases ?? []) as Disease[]).map((d) => [d.id, d])
+    );
+  }
+
+  return (cats ?? []).map((c) => {
+    const ids = categoryToDiseaseIds.get((c as Category).id) ?? new Set();
+    const diseases = Array.from(ids)
+      .map((id) => diseasesById.get(id))
+      .filter((d): d is Disease => !!d);
+    return { ...(c as Category), diseases };
+  });
+}
+
 export async function getCategoryBySlug(
   slug: string
 ): Promise<{ category: Category; diseases: Disease[] } | null> {

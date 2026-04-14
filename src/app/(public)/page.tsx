@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getCategories } from "@/lib/queries/categories";
-import { getFeaturedRemedies } from "@/lib/queries/remedies";
+import { getFeaturedDiseases, getPublicDiseases } from "@/lib/queries/diseases";
 import HeroSearch from "./_components/HeroSearch";
 import NewsletterForm from "./_components/NewsletterForm";
 
@@ -14,20 +14,26 @@ const colorMap: Record<string, { bg: string; text: string }> = {
 };
 
 export default async function HomePage() {
-  const [categories, remediesData] = await Promise.all([
+  const [categories, featured] = await Promise.all([
     getCategories(),
-    getFeaturedRemedies(),
+    getFeaturedDiseases(),
   ]);
 
-  const remedies = remediesData.map((r) => ({
-    name: r.name,
-    scientific: r.scientific_name || "",
-    desc: r.short_description || r.description || "",
-    tag: r.type || "Herbal",
+  // Fall back to any active diseases if none are explicitly featured.
+  const diseasesData = featured.length > 0
+    ? featured
+    : (await getPublicDiseases()).slice(0, 6);
+
+  const diseases = diseasesData.map((d) => ({
+    name: d.name,
+    scientific: d.scientific_name || d.yoruba_name || "",
+    desc: Array.isArray(d.description) ? d.description[0] ?? "" : "",
+    tag: d.severity_label || d.category || "Condition",
     tagColor: "text-primary",
-    readTime: r.prep_time || "5 min read",
-    slug: r.slug,
-    image: r.image || "",
+    symptoms: d.symptoms ?? [],
+    slug: d.slug,
+    image: d.hero_image || "",
+    icon: d.icon || "local_hospital",
   }));
   return (
     <>
@@ -69,7 +75,7 @@ export default async function HomePage() {
             Popular Categories
           </h2>
           <Link
-            href="/conditions"
+            href="/categories"
             className="hidden sm:flex items-center gap-1 text-primary font-semibold hover:underline"
           >
             View all categories
@@ -103,7 +109,7 @@ export default async function HomePage() {
         </div>
         <div className="mt-6 flex justify-center sm:hidden">
           <Link
-            href="/conditions"
+            href="/categories"
             className="flex items-center gap-1 text-primary font-semibold hover:underline text-sm"
           >
             View all categories
@@ -114,24 +120,24 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Latest Herbal Remedies ── */}
+      {/* ── Featured Diseases ── */}
       <section className="py-12 md:py-16 px-4 bg-surface-container-lowest border-y border-outline-variant/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
             <div>
               <h2 className="text-lg sm:text-2xl md:text-3xl font-serif font-bold text-primary tracking-tight mb-2">
-                Latest Herbal Remedies
+                Common Diseases & Conditions
               </h2>
               <p className="text-on-surface/50 max-w-xl text-sm sm:text-base">
-                Explore recently added botanicals and their healing properties
-                backed by traditional wisdom.
+                Browse health conditions and discover the natural remedies
+                traditionally used to address them.
               </p>
             </div>
             <Link
-              href="/remedies"
+              href="/conditions"
               className="flex items-center gap-1 text-primary font-semibold hover:underline"
             >
-              View all remedies
+              View all diseases
               <span className="material-symbols-outlined text-sm">
                 arrow_forward
               </span>
@@ -139,46 +145,58 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {remedies.map((remedy) => (
+            {diseases.map((disease) => (
               <article
-                key={remedy.slug}
+                key={disease.slug}
                 className="flex flex-col rounded-xl overflow-hidden bg-surface border border-outline-variant/10 hover:shadow-xl hover:shadow-primary/10 transition-shadow group"
               >
-                <div className="h-44 sm:h-56 overflow-hidden relative">
+                <div className="h-44 sm:h-56 overflow-hidden relative bg-primary/5">
                   <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-xs font-bold px-2 py-1 rounded uppercase tracking-wide z-10">
-                    <span className={remedy.tagColor}>{remedy.tag}</span>
+                    <span className={disease.tagColor}>{disease.tag}</span>
                   </div>
-                  <Image
-                    src={remedy.image}
-                    alt={remedy.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {disease.image ? (
+                    <Image
+                      src={disease.image}
+                      alt={disease.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="material-symbols-outlined text-6xl text-primary/40">
+                        {disease.icon}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="p-4 sm:p-6 flex flex-col flex-grow">
                   <div className="mb-2">
                     <h3 className="text-base sm:text-xl font-serif font-bold text-on-surface group-hover:text-primary transition-colors">
-                      {remedy.name}
+                      {disease.name}
                     </h3>
-                    <p className="text-xs font-medium text-on-surface/40 italic">
-                      {remedy.scientific}
-                    </p>
+                    {disease.scientific && (
+                      <p className="text-xs font-medium text-on-surface/40 italic">
+                        {disease.scientific}
+                      </p>
+                    )}
                   </div>
                   <p className="text-on-surface/50 text-sm line-clamp-2 mb-4">
-                    {remedy.desc}
+                    {disease.desc}
                   </p>
                   <div className="mt-auto pt-4 border-t border-outline-variant/10 flex items-center justify-between">
                     <span className="text-xs text-on-surface/40 flex items-center gap-1">
                       <span className="material-symbols-outlined text-sm">
-                        schedule
+                        healing
                       </span>
-                      {remedy.readTime}
+                      {disease.symptoms.length > 0
+                        ? `${disease.symptoms.length} symptom${disease.symptoms.length === 1 ? "" : "s"}`
+                        : "View details"}
                     </span>
                     <Link
-                      href={`/remedies/${remedy.slug}`}
+                      href={`/conditions/${disease.slug}`}
                       className="text-sm font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all"
                     >
-                      Read Benefits
+                      View Remedies
                       <span className="material-symbols-outlined text-sm">
                         arrow_right_alt
                       </span>
