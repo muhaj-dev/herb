@@ -13,6 +13,8 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState("");
+  const [yorubaName, setYorubaName] = useState("");
+  const [yorubaDescription, setYorubaDescription] = useState("");
   const [scientificName, setScientificName] = useState("");
   const [type, setType] = useState("");
   const [prepTime, setPrepTime] = useState("");
@@ -23,6 +25,7 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
     { name: "", quantity: "" },
   ]);
   const [imageUrl, setImageUrl] = useState("");
+  const [diseaseQuery, setDiseaseQuery] = useState("");
   const [dosage, setDosage] = useState("");
   const [duration, setDuration] = useState("");
   const [precautions, setPrecautions] = useState("");
@@ -54,10 +57,15 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
   const handlePublish = () => {
     setError(null);
     if (!name.trim()) return setError("Remedy name is required.");
+    if (!yorubaName.trim()) return setError("Yoruba name is required.");
+    if (!yorubaDescription.trim())
+      return setError("Yoruba description is required.");
 
     startTransition(async () => {
       const result = await createRemedy({
         name: name.trim(),
+        yoruba_name: yorubaName.trim(),
+        yoruba_description: yorubaDescription.trim(),
         scientific_name: scientificName.trim() || undefined,
         type: type || undefined,
         prep_time: prepTime.trim() || undefined,
@@ -150,15 +158,49 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
                     className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
                     htmlFor="remedy-name"
                   >
-                    Remedy Name <span className="text-red-400">*</span>
+                    Remedy Name (English) <span className="text-red-400">*</span>
                   </label>
                   <input
                     className={inputCls}
                     id="remedy-name"
-                    placeholder="e.g. Golden Turmeric Paste"
+                    placeholder="e.g. Moringa Leaf Tea"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
+                    htmlFor="remedy-yoruba-name"
+                  >
+                    Yoruba Name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    className={inputCls}
+                    id="remedy-yoruba-name"
+                    placeholder="e.g. Ewé Igbálé"
+                    type="text"
+                    value={yorubaName}
+                    onChange={(e) => setYorubaName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
+                    htmlFor="remedy-yoruba-description"
+                  >
+                    Yoruba Description <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    className={`${inputCls} resize-none`}
+                    id="remedy-yoruba-description"
+                    placeholder="Ṣàlàyé oògùn náà àti àwọn ànfàní rẹ̀ ní èdè Yorùbá..."
+                    rows={3}
+                    value={yorubaDescription}
+                    onChange={(e) => setYorubaDescription(e.target.value)}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
@@ -234,33 +276,86 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
-                    Associated Diseases
-                  </label>
-                  <div className="bg-[#162b1b] border border-[#234829] rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
-                    {diseases.length === 0 ? (
-                      <p className="text-xs text-slate-500 text-center py-2">
-                        No diseases in database yet.
-                      </p>
-                    ) : (
-                      diseases.map((d) => (
-                        <label
-                          key={d.id}
-                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#234829]/50 cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedDiseaseIds.includes(d.id)}
-                            onChange={() => toggleDisease(d.id)}
-                            className="accent-[#13ec37] w-4 h-4"
-                          />
-                          <span className="text-sm text-slate-200">
-                            {d.name}
-                          </span>
-                        </label>
-                      ))
-                    )}
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300">
+                      Associated Diseases
+                    </label>
+                    <span className="bg-[#13ec37]/10 text-[#13ec37] text-xs font-bold px-2 py-0.5 rounded-full">
+                      {selectedDiseaseIds.length} Selected
+                    </span>
                   </div>
+
+                  {selectedDiseaseIds.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {diseases
+                        .filter((d) => selectedDiseaseIds.includes(d.id))
+                        .map((d) => (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => toggleDisease(d.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#13ec37]/15 border border-[#13ec37]/40 text-[#13ec37] rounded-full text-xs font-medium hover:bg-[#13ec37]/25 transition-colors"
+                          >
+                            {d.name}
+                            <span className="material-symbols-outlined text-[16px]">
+                              close
+                            </span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+
+                  <input
+                    type="text"
+                    placeholder="Search diseases to link..."
+                    value={diseaseQuery}
+                    onChange={(e) => setDiseaseQuery(e.target.value)}
+                    className={`${inputCls} text-sm`}
+                  />
+
+                  {diseases.length === 0 ? (
+                    <p className="text-slate-500 text-xs mt-3">
+                      No diseases in database yet. Create one first.
+                    </p>
+                  ) : (
+                    (() => {
+                      const filtered = diseases
+                        .filter((d) => !selectedDiseaseIds.includes(d.id))
+                        .filter((d) =>
+                          diseaseQuery.trim()
+                            ? d.name
+                                .toLowerCase()
+                                .includes(diseaseQuery.trim().toLowerCase())
+                            : true
+                        )
+                        .slice(0, 8);
+                      if (filtered.length === 0) {
+                        return (
+                          <p className="text-slate-500 text-xs mt-3">
+                            {diseaseQuery ? "No matches." : "All diseases are linked."}
+                          </p>
+                        );
+                      }
+                      return (
+                        <ul className="mt-3 flex flex-col gap-1 max-h-56 overflow-y-auto">
+                          {filtered.map((d) => (
+                            <li key={d.id}>
+                              <button
+                                type="button"
+                                onClick={() => toggleDisease(d.id)}
+                                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#234829]/50 text-left transition-colors"
+                              >
+                                <span className="text-sm text-slate-200">{d.name}</span>
+                                <span className="material-symbols-outlined text-[18px] text-slate-400">
+                                  add
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      );
+                    })()
+                  )}
                 </div>
               </div>
             </div>
@@ -389,6 +484,26 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
                 <p className="text-xs text-slate-500 mt-2">
                   Enter a direct URL to the remedy image.
                 </p>
+                <div className="mt-3 aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center">
+                  {imageUrl.trim() ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt="Remedy preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-slate-600">
+                      <span className="material-symbols-outlined text-3xl">
+                        image
+                      </span>
+                      <span className="text-xs">No image yet</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

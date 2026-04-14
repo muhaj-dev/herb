@@ -6,7 +6,10 @@ import Link from "next/link";
 import type { Condition } from "@/lib/supabase/types";
 import { deleteCondition } from "@/lib/actions/condition-actions";
 
-type ConditionWithCategory = Condition & { category_name: string | null };
+type ConditionWithCategory = Condition & {
+  category_name: string | null;
+  disease_count: number;
+};
 
 const PER_PAGE = 10;
 
@@ -98,7 +101,7 @@ export default function ConditionTable({
                   Category
                 </th>
                 <th className="px-6 py-4 font-bold tracking-wider">
-                  Remedy Count
+                  Diseases
                 </th>
                 <th className="px-6 py-4 font-bold tracking-wider text-right">
                   Actions
@@ -162,7 +165,7 @@ export default function ConditionTable({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="bg-[#13ec37]/10 text-[#13ec37] text-xs font-bold px-2.5 py-1 rounded-full">
-                        {condition.remedy_count}
+                        {condition.disease_count}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">

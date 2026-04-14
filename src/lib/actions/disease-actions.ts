@@ -12,6 +12,8 @@ function slugify(text: string): string {
 
 export async function createDisease(formData: {
   name: string;
+  yoruba_name: string;
+  yoruba_description: string;
   scientific_name?: string;
   category: string;
   symptoms: string[];
@@ -21,13 +23,25 @@ export async function createDisease(formData: {
   status: boolean;
   is_featured: boolean;
   remedy_ids?: string[];
+  condition_ids?: string[];
 }): Promise<{ id: string } | { error: string }> {
+  if (!formData.yoruba_name?.trim()) {
+    return { error: "Yoruba name is required." };
+  }
+  if (!formData.yoruba_description?.trim()) {
+    return { error: "Yoruba description is required." };
+  }
+  if (!formData.condition_ids || formData.condition_ids.length === 0) {
+    return { error: "A disease must be linked to at least one condition." };
+  }
   const supabase = await createClient();
 
   const { data: disease, error } = await supabase
     .from("diseases")
     .insert({
       name: formData.name,
+      yoruba_name: formData.yoruba_name.trim(),
+      yoruba_description: formData.yoruba_description.trim(),
       slug: slugify(formData.name),
       scientific_name: formData.scientific_name || null,
       category: formData.category,
@@ -58,15 +72,61 @@ export async function createDisease(formData: {
     if (linkError) console.error("[createDisease] Remedy link error:", linkError);
   }
 
+  if (disease && formData.condition_ids && formData.condition_ids.length > 0) {
+    const condLinks = formData.condition_ids.map((cid) => ({
+      condition_id: cid,
+      disease_id: disease.id,
+    }));
+    const { error: condError } = await supabase
+      .from("condition_diseases")
+      .insert(condLinks);
+    if (condError) {
+      console.error("[createDisease] Condition link error:", condError);
+      return { error: condError.message ?? "Failed to link conditions." };
+    }
+  }
+
   revalidatePath("/admin/diseases");
+  revalidatePath("/admin/conditions");
   revalidatePath("/admin");
   return disease!;
+}
+
+export async function updateDiseaseConditions(
+  diseaseId: string,
+  conditionIds: string[]
+): Promise<{ success: true } | { error: string }> {
+  if (conditionIds.length === 0) {
+    return { error: "A disease must be linked to at least one condition." };
+  }
+  const supabase = await createClient();
+
+  const { error: delError } = await supabase
+    .from("condition_diseases")
+    .delete()
+    .eq("disease_id", diseaseId);
+  if (delError) return { error: delError.message };
+
+  const rows = conditionIds.map((condition_id) => ({
+    condition_id,
+    disease_id: diseaseId,
+  }));
+  const { error: insError } = await supabase
+    .from("condition_diseases")
+    .insert(rows);
+  if (insError) return { error: insError.message };
+
+  revalidatePath("/admin/diseases");
+  revalidatePath("/admin/conditions");
+  return { success: true };
 }
 
 export async function updateDisease(
   id: string,
   updates: {
     name?: string;
+    yoruba_name?: string;
+    yoruba_description?: string;
     category?: string;
     status?: string;
     severity?: number;
@@ -76,9 +136,21 @@ export async function updateDisease(
     tags?: string[];
   }
 ): Promise<{ success: true } | { error: string }> {
+  if (updates.yoruba_name !== undefined && !updates.yoruba_name.trim()) {
+    return { error: "Yoruba name cannot be empty." };
+  }
+  if (
+    updates.yoruba_description !== undefined &&
+    !updates.yoruba_description.trim()
+  ) {
+    return { error: "Yoruba description cannot be empty." };
+  }
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = { ...updates };
+  if (updates.yoruba_name) updateData.yoruba_name = updates.yoruba_name.trim();
+  if (updates.yoruba_description)
+    updateData.yoruba_description = updates.yoruba_description.trim();
   if (updates.name) {
     updateData.slug = slugify(updates.name);
   }

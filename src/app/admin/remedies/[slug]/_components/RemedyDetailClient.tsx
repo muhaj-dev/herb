@@ -4,13 +4,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateRemedy, deleteRemedy } from "@/lib/actions/remedy-actions";
+import {
+  updateRemedy,
+  deleteRemedy,
+  updateRemedyDiseases,
+} from "@/lib/actions/remedy-actions";
 
 type Ingredient = { name: string; quantity: string };
 
 type RemedyData = {
   id: string;
   name: string;
+  yoruba_name?: string | null;
+  yoruba_description?: string | null;
   slug: string;
   scientific_name?: string | null;
   type?: string | null;
@@ -43,42 +49,50 @@ function formatDate(iso: string) {
 export default function RemedyDetailClient({
   remedy,
   diseases,
+  linkedDiseaseIds,
 }: {
   remedy: RemedyData;
   diseases: Disease[];
+  linkedDiseaseIds: string[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [draft, setDraft] = useState({
+  const initialDraft = () => ({
     name: remedy.name,
+    yoruba_name: remedy.yoruba_name ?? "",
+    yoruba_description: remedy.yoruba_description ?? "",
     short_description: remedy.short_description ?? "",
     preparation_steps: remedy.preparation_steps ?? "",
+    image: remedy.image ?? "",
     dosage: remedy.dosage ?? "",
     duration: remedy.duration ?? "",
     precautions: remedy.precautions ?? "",
     is_active: remedy.is_active,
     is_featured: remedy.is_featured,
     ingredients: (remedy.ingredients ?? []) as Ingredient[],
+    disease_ids: [...linkedDiseaseIds],
   });
+
+  const [draft, setDraft] = useState(initialDraft);
+  const [diseaseQuery, setDiseaseQuery] = useState("");
 
   const startEdit = () => {
     setError(null);
-    setDraft({
-      name: remedy.name,
-      short_description: remedy.short_description ?? "",
-      preparation_steps: remedy.preparation_steps ?? "",
-      dosage: remedy.dosage ?? "",
-      duration: remedy.duration ?? "",
-      precautions: remedy.precautions ?? "",
-      is_active: remedy.is_active,
-      is_featured: remedy.is_featured,
-      ingredients: (remedy.ingredients ?? []) as Ingredient[],
-    });
+    setDraft(initialDraft());
+    setDiseaseQuery("");
     setEditing(true);
   };
+
+  const toggleDisease = (id: string) =>
+    setDraft((d) => ({
+      ...d,
+      disease_ids: d.disease_ids.includes(id)
+        ? d.disease_ids.filter((x) => x !== id)
+        : [...d.disease_ids, id],
+    }));
 
   const cancelEdit = () => {
     setError(null);
@@ -88,11 +102,17 @@ export default function RemedyDetailClient({
   const saveEdit = () => {
     setError(null);
     if (!draft.name.trim()) return setError("Remedy name is required.");
+    if (!draft.yoruba_name.trim()) return setError("Yoruba name is required.");
+    if (!draft.yoruba_description.trim())
+      return setError("Yoruba description is required.");
     startTransition(async () => {
       const result = await updateRemedy(remedy.id, {
         name: draft.name.trim(),
+        yoruba_name: draft.yoruba_name.trim(),
+        yoruba_description: draft.yoruba_description.trim(),
         short_description: draft.short_description.trim() || undefined,
         preparation_steps: draft.preparation_steps.trim() || undefined,
+        image: draft.image.trim() ? draft.image.trim() : null,
         dosage: draft.dosage.trim() || undefined,
         duration: draft.duration.trim() || undefined,
         precautions: draft.precautions.trim() || undefined,
@@ -102,10 +122,18 @@ export default function RemedyDetailClient({
       });
       if ("error" in result) {
         setError(result.error);
-      } else {
-        setEditing(false);
-        router.refresh();
+        return;
       }
+      const diseaseResult = await updateRemedyDiseases(
+        remedy.id,
+        draft.disease_ids
+      );
+      if ("error" in diseaseResult) {
+        setError(diseaseResult.error);
+        return;
+      }
+      setEditing(false);
+      router.refresh();
     });
   };
 
@@ -217,6 +245,11 @@ export default function RemedyDetailClient({
                   </span>
                 )}
               </div>
+              {!editing && remedy.yoruba_name && (
+                <p className="text-[#13ec37] text-sm italic mt-1">
+                  {remedy.yoruba_name}
+                </p>
+              )}
               {remedy.scientific_name && (
                 <p className="text-slate-400 text-sm italic">{remedy.scientific_name}</p>
               )}
@@ -251,6 +284,64 @@ export default function RemedyDetailClient({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Left Column */}
           <div className="lg:col-span-2 flex flex-col gap-4 sm:gap-8">
+            {/* Basic Details (Yoruba) */}
+            <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#13ec37]">
+                  translate
+                </span>
+                Basic Details
+              </h3>
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
+                    Yoruba Name {editing && <span className="text-red-400">*</span>}
+                  </label>
+                  {editing ? (
+                    <input
+                      className={inputCls}
+                      placeholder="e.g. Ewé Igbálé"
+                      value={draft.yoruba_name}
+                      onChange={(e) =>
+                        setDraft({ ...draft, yoruba_name: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <p className="text-slate-200 text-sm italic">
+                      {remedy.yoruba_name || (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
+                    Yoruba Description {editing && <span className="text-red-400">*</span>}
+                  </label>
+                  {editing ? (
+                    <textarea
+                      className={`${inputCls} resize-none min-h-[100px]`}
+                      rows={3}
+                      placeholder="Ṣàlàyé oògùn náà ní èdè Yorùbá..."
+                      value={draft.yoruba_description}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          yoruba_description: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    <p className="text-slate-300 text-sm italic leading-relaxed">
+                      {remedy.yoruba_description || (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Description */}
             <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
@@ -357,6 +448,181 @@ export default function RemedyDetailClient({
 
           {/* Right Column */}
           <div className="flex flex-col gap-4 sm:gap-6">
+            {/* Image */}
+            <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-5">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider mb-3 sm:mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#13ec37] text-[18px]">
+                  image
+                </span>
+                Image
+              </h4>
+              {editing ? (
+                <>
+                  <input
+                    className={inputCls}
+                    placeholder="https://example.com/image.jpg"
+                    type="url"
+                    value={draft.image}
+                    onChange={(e) =>
+                      setDraft({ ...draft, image: e.target.value })
+                    }
+                  />
+                  <div className="mt-3 aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center">
+                    {draft.image.trim() ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={draft.image}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display =
+                            "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-slate-600">
+                        <span className="material-symbols-outlined text-3xl">
+                          image
+                        </span>
+                        <span className="text-xs">No image</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center relative">
+                  {remedy.image ? (
+                    <Image
+                      src={remedy.image}
+                      alt={remedy.name}
+                      fill
+                      sizes="300px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-slate-600">
+                      <span className="material-symbols-outlined text-3xl">
+                        image
+                      </span>
+                      <span className="text-xs">No image</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Linked Diseases */}
+            <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h4 className="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#13ec37] text-[18px]">
+                    coronavirus
+                  </span>
+                  Linked Diseases
+                </h4>
+                {editing && (
+                  <span className="bg-[#13ec37]/10 text-[#13ec37] text-xs font-bold px-2 py-0.5 rounded-full">
+                    {draft.disease_ids.length}
+                  </span>
+                )}
+              </div>
+              {editing ? (
+                <>
+                  {draft.disease_ids.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {diseases
+                        .filter((d) => draft.disease_ids.includes(d.id))
+                        .map((d) => (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => toggleDisease(d.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#13ec37]/15 border border-[#13ec37]/40 text-[#13ec37] rounded-full text-xs font-medium hover:bg-[#13ec37]/25 transition-colors"
+                          >
+                            {d.name}
+                            <span className="material-symbols-outlined text-[16px]">
+                              close
+                            </span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Search diseases..."
+                    value={diseaseQuery}
+                    onChange={(e) => setDiseaseQuery(e.target.value)}
+                    className={inputCls}
+                  />
+                  {(() => {
+                    const filtered = diseases
+                      .filter((d) => !draft.disease_ids.includes(d.id))
+                      .filter((d) =>
+                        diseaseQuery.trim()
+                          ? d.name
+                              .toLowerCase()
+                              .includes(diseaseQuery.trim().toLowerCase())
+                          : true
+                      )
+                      .slice(0, 8);
+                    if (diseases.length === 0) {
+                      return (
+                        <p className="text-slate-500 text-xs mt-3">
+                          No diseases in database yet.
+                        </p>
+                      );
+                    }
+                    if (filtered.length === 0) {
+                      return (
+                        <p className="text-slate-500 text-xs mt-3">
+                          {diseaseQuery
+                            ? "No matches."
+                            : "All diseases linked."}
+                        </p>
+                      );
+                    }
+                    return (
+                      <ul className="mt-3 flex flex-col gap-1 max-h-56 overflow-y-auto">
+                        {filtered.map((d) => (
+                          <li key={d.id}>
+                            <button
+                              type="button"
+                              onClick={() => toggleDisease(d.id)}
+                              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#234829]/50 text-left transition-colors"
+                            >
+                              <span className="text-sm text-slate-200">
+                                {d.name}
+                              </span>
+                              <span className="material-symbols-outlined text-[18px] text-slate-400">
+                                add
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  })()}
+                </>
+              ) : linkedDiseaseIds.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {diseases
+                    .filter((d) => linkedDiseaseIds.includes(d.id))
+                    .map((d) => (
+                      <span
+                        key={d.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#234829] text-slate-200 rounded-full text-xs font-medium"
+                      >
+                        {d.name}
+                      </span>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm italic">
+                  No diseases linked.
+                </p>
+              )}
+            </div>
+
             {/* Usage & Dosage */}
             <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-5">
               <h4 className="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider mb-3 sm:mb-4">Usage & Dosage</h4>

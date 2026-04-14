@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getCategories } from "@/lib/queries/categories";
+import { getDiseaseOptions } from "@/lib/queries/diseases";
 import AddConditionForm from "./_components/AddConditionForm";
 
 export const metadata: Metadata = {
@@ -7,6 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AddNewConditionPage() {
-  const categories = await getCategories();
-  return <AddConditionForm categories={categories} />;
+  const [categories, diseases] = await Promise.all([
+    getCategories(),
+    getDiseaseOptions(),
+  ]);
+  return <AddConditionForm categories={categories} diseases={diseases} />;
 }

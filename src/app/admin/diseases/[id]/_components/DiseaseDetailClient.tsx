@@ -4,7 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateDisease, updateDiseaseRemedies, deleteDisease } from "@/lib/actions/disease-actions";
+import {
+  updateDisease,
+  updateDiseaseRemedies,
+  updateDiseaseConditions,
+  deleteDisease,
+} from "@/lib/actions/disease-actions";
 
 const categoryOptions = [
   "respiratory",
@@ -30,6 +35,8 @@ type Remedy = {
 type Disease = {
   id: string;
   name: string;
+  yoruba_name?: string | null;
+  yoruba_description?: string | null;
   slug: string;
   scientific_name?: string | null;
   icon?: string | null;
@@ -49,6 +56,7 @@ type Disease = {
 };
 
 type RemedyOption = { id: string; name: string; type?: string | null };
+type ConditionOption = { id: string; name: string };
 
 function formatDate(iso?: string | null) {
   if (!iso) return "—";
@@ -62,9 +70,13 @@ function formatDate(iso?: string | null) {
 export default function DiseaseDetailClient({
   disease,
   allRemedies,
+  allConditions,
+  linkedConditionIds,
 }: {
   disease: Disease;
   allRemedies: RemedyOption[];
+  allConditions: ConditionOption[];
+  linkedConditionIds: string[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -73,6 +85,8 @@ export default function DiseaseDetailClient({
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState({
     name: disease.name,
+    yoruba_name: disease.yoruba_name ?? "",
+    yoruba_description: disease.yoruba_description ?? "",
     category: disease.category ?? "",
     status: disease.status,
     severity: disease.severity ?? 0,
@@ -81,6 +95,25 @@ export default function DiseaseDetailClient({
     symptoms: disease.symptoms ?? [],
     tags: disease.tags ?? [],
   });
+  const [selectedConditionIds, setSelectedConditionIds] =
+    useState<string[]>(linkedConditionIds);
+  const [conditionQuery, setConditionQuery] = useState("");
+
+  const selectedConditions = allConditions.filter((c) =>
+    selectedConditionIds.includes(c.id)
+  );
+  const filteredConditions = allConditions
+    .filter((c) => !selectedConditionIds.includes(c.id))
+    .filter((c) =>
+      conditionQuery.trim()
+        ? c.name.toLowerCase().includes(conditionQuery.trim().toLowerCase())
+        : true
+    )
+    .slice(0, 8);
+  const toggleCondition = (id: string) =>
+    setSelectedConditionIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   const [newSymptom, setNewSymptom] = useState("");
   const [selectedRemedyIds, setSelectedRemedyIds] = useState<string[]>(
     disease.disease_remedy?.map((dr) => dr.remedy.id).filter(Boolean) ?? []
@@ -96,6 +129,8 @@ export default function DiseaseDetailClient({
     setError(null);
     setDraft({
       name: disease.name,
+      yoruba_name: disease.yoruba_name ?? "",
+      yoruba_description: disease.yoruba_description ?? "",
       category: disease.category ?? "",
       status: disease.status,
       severity: disease.severity ?? 0,
@@ -118,10 +153,18 @@ export default function DiseaseDetailClient({
 
   const saveEdit = () => {
     setError(null);
+    if (!draft.yoruba_name.trim())
+      return setError("Yoruba name is required.");
+    if (!draft.yoruba_description.trim())
+      return setError("Yoruba description is required.");
+    if (selectedConditionIds.length === 0)
+      return setError("A disease must be linked to at least one condition.");
     startTransition(async () => {
       try {
-        await updateDisease(disease.id, {
+        const res = await updateDisease(disease.id, {
           name: draft.name,
+          yoruba_name: draft.yoruba_name.trim(),
+          yoruba_description: draft.yoruba_description.trim(),
           category: draft.category,
           status: draft.status,
           severity: draft.severity,
@@ -130,7 +173,19 @@ export default function DiseaseDetailClient({
           symptoms: draft.symptoms,
           tags: draft.tags,
         });
+        if ("error" in res) {
+          setError(res.error);
+          return;
+        }
         await updateDiseaseRemedies(disease.id, selectedRemedyIds);
+        const condRes = await updateDiseaseConditions(
+          disease.id,
+          selectedConditionIds
+        );
+        if ("error" in condRes) {
+          setError(condRes.error);
+          return;
+        }
         setEditing(false);
         router.refresh();
       } catch (err: unknown) {
@@ -270,6 +325,33 @@ export default function DiseaseDetailClient({
                   {current.status}
                 </span>
               </div>
+              {editing ? (
+                <div className="space-y-2 mt-2 max-w-xl">
+                  <input
+                    value={draft.yoruba_name}
+                    placeholder="Yoruba name (required)"
+                    onChange={(e) =>
+                      setDraft({ ...draft, yoruba_name: e.target.value })
+                    }
+                    className={`${inputCls} italic`}
+                  />
+                  <textarea
+                    value={draft.yoruba_description}
+                    placeholder="Yoruba description (required)"
+                    rows={2}
+                    onChange={(e) =>
+                      setDraft({ ...draft, yoruba_description: e.target.value })
+                    }
+                    className={`${inputCls} italic resize-none`}
+                  />
+                </div>
+              ) : (
+                disease.yoruba_name && (
+                  <p className="text-[#13ec37] text-sm italic mt-1">
+                    {disease.yoruba_name}
+                  </p>
+                )
+              )}
               <p className="text-slate-400 text-xs sm:text-sm max-w-2xl">
                 ID: {disease.id.slice(0, 8).toUpperCase()} &bull; Created: {formatDate(disease.created_at)}
               </p>
@@ -382,6 +464,98 @@ export default function DiseaseDetailClient({
                 </ul>
               ) : (
                 <p className="text-slate-500 text-sm italic">No symptoms listed.</p>
+              )}
+            </div>
+
+            {/* Linked Conditions (required) */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base sm:text-xl font-bold text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#13ec37]">
+                    health_and_safety
+                  </span>
+                  Conditions{" "}
+                  {editing && <span className="text-red-400">*</span>}
+                </h3>
+                {editing && (
+                  <span className="bg-[#13ec37]/10 text-[#13ec37] text-xs font-bold px-2 py-1 rounded-full">
+                    {selectedConditionIds.length} Selected
+                  </span>
+                )}
+              </div>
+
+              {editing ? (
+                <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-6">
+                  {selectedConditions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {selectedConditions.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleCondition(c.id)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#13ec37]/15 border border-[#13ec37]/40 text-[#13ec37] rounded-full text-xs font-medium hover:bg-[#13ec37]/25 transition-colors"
+                        >
+                          {c.name}
+                          <span className="material-symbols-outlined text-[16px]">
+                            close
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Search conditions to link..."
+                    value={conditionQuery}
+                    onChange={(e) => setConditionQuery(e.target.value)}
+                    className={inputCls}
+                  />
+                  {allConditions.length === 0 ? (
+                    <p className="text-slate-500 text-xs mt-3">
+                      No conditions exist yet.
+                    </p>
+                  ) : filteredConditions.length === 0 ? (
+                    <p className="text-slate-500 text-xs mt-3">
+                      {conditionQuery
+                        ? "No matches."
+                        : "All conditions linked."}
+                    </p>
+                  ) : (
+                    <ul className="mt-3 flex flex-col gap-1 max-h-56 overflow-y-auto">
+                      {filteredConditions.map((c) => (
+                        <li key={c.id}>
+                          <button
+                            type="button"
+                            onClick={() => toggleCondition(c.id)}
+                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#234829]/50 text-left transition-colors"
+                          >
+                            <span className="text-sm text-slate-200">
+                              {c.name}
+                            </span>
+                            <span className="material-symbols-outlined text-[18px] text-slate-400">
+                              add
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : selectedConditions.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedConditions.map((c) => (
+                    <span
+                      key={c.id}
+                      className="inline-flex items-center px-3 py-1.5 bg-[#13ec37]/10 border border-[#13ec37]/30 text-[#13ec37] rounded-full text-xs font-medium"
+                    >
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm italic">
+                  Not linked to any conditions yet. Click Edit to fix.
+                </p>
               )}
             </div>
 

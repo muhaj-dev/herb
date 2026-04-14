@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
+import type { CategoryWithCounts } from "@/lib/queries/categories";
 import type { Category } from "@/lib/supabase/types";
 import {
   createCategory,
@@ -19,7 +20,7 @@ function slugify(text: string): string {
 export default function CategoryTable({
   categories,
 }: {
-  categories: Category[];
+  categories: CategoryWithCounts[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -31,17 +32,17 @@ export default function CategoryTable({
 
   // Add form state
   const [addName, setAddName] = useState("");
+  const [addYorubaName, setAddYorubaName] = useState("");
   const [addSlug, setAddSlug] = useState("");
   const [addIcon, setAddIcon] = useState("");
   const [addColor, setAddColor] = useState("");
-  const [addOrder, setAddOrder] = useState("0");
 
   // Edit form state
   const [editName, setEditName] = useState("");
+  const [editYorubaName, setEditYorubaName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editIcon, setEditIcon] = useState("");
   const [editColor, setEditColor] = useState("");
-  const [editOrder, setEditOrder] = useState("0");
 
   const filtered = useMemo(() => {
     if (!query.trim()) return categories;
@@ -51,21 +52,21 @@ export default function CategoryTable({
 
   function resetAddForm() {
     setAddName("");
+    setAddYorubaName("");
     setAddSlug("");
     setAddIcon("");
     setAddColor("");
-    setAddOrder("0");
     setShowAdd(false);
     setError(null);
   }
 
-  function startEdit(cat: Category) {
+  function startEdit(cat: CategoryWithCounts | Category) {
     setEditId(cat.id);
     setEditName(cat.name);
+    setEditYorubaName(cat.yoruba_name ?? "");
     setEditSlug(cat.slug);
     setEditIcon(cat.icon ?? "");
     setEditColor(cat.color ?? "");
-    setEditOrder(String(cat.display_order));
     setError(null);
   }
 
@@ -79,14 +80,18 @@ export default function CategoryTable({
       setError("Category name is required.");
       return;
     }
+    if (!addYorubaName.trim()) {
+      setError("Yoruba name is required.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
       const result = await createCategory({
         name: addName.trim(),
+        yoruba_name: addYorubaName.trim(),
         slug: addSlug.trim() || undefined,
         icon: addIcon.trim() || undefined,
         color: addColor.trim() || undefined,
-        display_order: parseInt(addOrder) || 0,
       });
       if ("error" in result) {
         setError(result.error);
@@ -102,14 +107,18 @@ export default function CategoryTable({
       setError("Category name is required.");
       return;
     }
+    if (!editYorubaName.trim()) {
+      setError("Yoruba name is required.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
       const result = await updateCategory(editId!, {
         name: editName.trim(),
+        yoruba_name: editYorubaName.trim(),
         slug: editSlug.trim() || slugify(editName.trim()),
         icon: editIcon.trim() || undefined,
         color: editColor.trim() || undefined,
-        display_order: parseInt(editOrder) || 0,
       });
       if ("error" in result) {
         setError(result.error);
@@ -179,10 +188,13 @@ export default function CategoryTable({
             <thead className="border-b border-white/10 bg-white/5 text-xs uppercase text-slate-400">
               <tr>
                 <th className="px-6 py-4 font-bold tracking-wider">Name</th>
+                <th className="px-6 py-4 font-bold tracking-wider">
+                  Yoruba Name
+                </th>
                 <th className="px-6 py-4 font-bold tracking-wider">Slug</th>
                 <th className="px-6 py-4 font-bold tracking-wider">Icon</th>
                 <th className="px-6 py-4 font-bold tracking-wider">Color</th>
-                <th className="px-6 py-4 font-bold tracking-wider">Order</th>
+                <th className="px-6 py-4 font-bold tracking-wider">Diseases</th>
                 <th className="px-6 py-4 font-bold tracking-wider text-right">
                   Actions
                 </th>
@@ -201,6 +213,14 @@ export default function CategoryTable({
                         setAddName(e.target.value);
                         if (!addSlug) setAddSlug("");
                       }}
+                    />
+                  </td>
+                  <td className="px-6 py-3">
+                    <input
+                      className={inputClass}
+                      placeholder="Yoruba name (required)"
+                      value={addYorubaName}
+                      onChange={(e) => setAddYorubaName(e.target.value)}
                     />
                   </td>
                   <td className="px-6 py-3">
@@ -227,15 +247,7 @@ export default function CategoryTable({
                       onChange={(e) => setAddColor(e.target.value)}
                     />
                   </td>
-                  <td className="px-6 py-3">
-                    <input
-                      className={inputClass}
-                      type="number"
-                      placeholder="0"
-                      value={addOrder}
-                      onChange={(e) => setAddOrder(e.target.value)}
-                    />
-                  </td>
+                  <td className="px-6 py-3 text-slate-600">—</td>
                   <td className="px-6 py-3 text-right">
                     <button
                       onClick={handleAdd}
@@ -255,7 +267,7 @@ export default function CategoryTable({
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-slate-400"
                   >
                     <span className="material-symbols-outlined text-4xl block mb-2 text-slate-600">
@@ -276,6 +288,14 @@ export default function CategoryTable({
                           className={inputClass}
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
+                        />
+                      </td>
+                      <td className="px-6 py-3">
+                        <input
+                          className={inputClass}
+                          placeholder="Yoruba name"
+                          value={editYorubaName}
+                          onChange={(e) => setEditYorubaName(e.target.value)}
                         />
                       </td>
                       <td className="px-6 py-3">
@@ -302,13 +322,8 @@ export default function CategoryTable({
                           onChange={(e) => setEditColor(e.target.value)}
                         />
                       </td>
-                      <td className="px-6 py-3">
-                        <input
-                          className={inputClass}
-                          type="number"
-                          value={editOrder}
-                          onChange={(e) => setEditOrder(e.target.value)}
-                        />
+                      <td className="px-6 py-3 text-slate-400 text-sm">
+                        {cat.disease_count}
                       </td>
                       <td className="px-6 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -357,6 +372,11 @@ export default function CategoryTable({
                           </span>
                         </div>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-[#13ec37] italic">
+                        {cat.yoruba_name || (
+                          <span className="text-slate-600 not-italic">—</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-400">
                         {cat.slug}
                       </td>
@@ -376,8 +396,13 @@ export default function CategoryTable({
                           <span className="text-slate-500">-</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-400">
-                        {cat.display_order}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#13ec37]/10 text-[#13ec37] border border-[#13ec37]/20">
+                          <span className="material-symbols-outlined text-[14px]">
+                            coronavirus
+                          </span>
+                          {cat.disease_count}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         {deleteConfirmId === cat.id ? (

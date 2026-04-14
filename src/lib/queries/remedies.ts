@@ -24,6 +24,18 @@ export async function getRemedyBySlug(slug: string): Promise<Remedy> {
   return data as Remedy;
 }
 
+export async function getPublicRemedyBySlug(slug: string): Promise<Remedy | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("remedies")
+    .select("*")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Remedy) ?? null;
+}
+
 export async function getRelatedRemedies(currentSlug: string, limit = 3): Promise<Remedy[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -55,6 +67,16 @@ export async function getAllRemediesAdmin(): Promise<Remedy[]> {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as Remedy[];
+}
+
+export async function getRemedyDiseaseIds(remedyId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("disease_remedy")
+    .select("disease_id")
+    .eq("remedy_id", remedyId);
+  if (error) return [];
+  return (data ?? []).map((row) => (row as { disease_id: string }).disease_id);
 }
 
 export async function getConditionsForRemedy(

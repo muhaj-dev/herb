@@ -23,14 +23,12 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
   const [addRole, setAddRole] = useState("");
   const [addBio, setAddBio] = useState("");
   const [addImage, setAddImage] = useState("");
-  const [addOrder, setAddOrder] = useState("0");
 
   // Edit form state
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editBio, setEditBio] = useState("");
   const [editImage, setEditImage] = useState("");
-  const [editOrder, setEditOrder] = useState("0");
 
   const filtered = useMemo(() => {
     if (!query.trim()) return members;
@@ -47,7 +45,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
     setAddRole("");
     setAddBio("");
     setAddImage("");
-    setAddOrder("0");
     setShowAdd(false);
     setError(null);
   }
@@ -58,7 +55,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
     setEditRole(member.role ?? "");
     setEditBio(member.bio ?? "");
     setEditImage(member.image ?? "");
-    setEditOrder(String(member.display_order));
     setError(null);
   }
 
@@ -79,7 +75,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
         role: addRole.trim() || undefined,
         bio: addBio.trim() || undefined,
         image: addImage.trim() || undefined,
-        display_order: parseInt(addOrder) || 0,
       });
       if ("error" in result) {
         setError(result.error);
@@ -102,7 +97,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
         role: editRole.trim() || undefined,
         bio: editBio.trim() || undefined,
         image: editImage.trim() || undefined,
-        display_order: parseInt(editOrder) || 0,
       });
       if ("error" in result) {
         setError(result.error);
@@ -219,18 +213,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
                 onChange={(e) => setAddImage(e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Display Order
-              </label>
-              <input
-                className={inputClass}
-                type="number"
-                placeholder="0"
-                value={addOrder}
-                onChange={(e) => setAddOrder(e.target.value)}
-              />
-            </div>
           </div>
           <div className="flex justify-end mt-4 gap-3">
             <button
@@ -262,7 +244,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
                 <th className="px-6 py-4 font-bold tracking-wider">Photo</th>
                 <th className="px-6 py-4 font-bold tracking-wider">Name</th>
                 <th className="px-6 py-4 font-bold tracking-wider">Role</th>
-                <th className="px-6 py-4 font-bold tracking-wider">Order</th>
                 <th className="px-6 py-4 font-bold tracking-wider text-right">
                   Actions
                 </th>
@@ -272,7 +253,7 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     className="px-6 py-12 text-center text-slate-400"
                   >
                     <span className="material-symbols-outlined text-4xl block mb-2 text-slate-600">
@@ -310,14 +291,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
                           placeholder="Role"
                           value={editRole}
                           onChange={(e) => setEditRole(e.target.value)}
-                        />
-                      </td>
-                      <td className="px-6 py-3">
-                        <input
-                          className={inputClass}
-                          type="number"
-                          value={editOrder}
-                          onChange={(e) => setEditOrder(e.target.value)}
                         />
                       </td>
                       <td className="px-6 py-3 text-right">
@@ -387,9 +360,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
                         ) : (
                           <span className="text-slate-500">-</span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-400">
-                        {member.display_order}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         {deleteConfirmId === member.id ? (

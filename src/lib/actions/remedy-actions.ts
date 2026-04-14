@@ -12,6 +12,8 @@ function slugify(text: string): string {
 
 export async function createRemedy(formData: {
   name: string;
+  yoruba_name: string;
+  yoruba_description: string;
   scientific_name?: string;
   type?: string;
   prep_time?: string;
@@ -26,12 +28,20 @@ export async function createRemedy(formData: {
   is_active: boolean;
   is_featured: boolean;
 }): Promise<{ id: string } | { error: string }> {
+  if (!formData.yoruba_name?.trim()) {
+    return { error: "Yoruba name is required." };
+  }
+  if (!formData.yoruba_description?.trim()) {
+    return { error: "Yoruba description is required." };
+  }
   const supabase = await createClient();
 
   const { data: remedy, error } = await supabase
     .from("remedies")
     .insert({
       name: formData.name,
+      yoruba_name: formData.yoruba_name.trim(),
+      yoruba_description: formData.yoruba_description.trim(),
       slug: slugify(formData.name),
       scientific_name: formData.scientific_name || null,
       type: formData.type || null,
@@ -75,12 +85,15 @@ export async function updateRemedy(
   id: string,
   updates: {
     name?: string;
+    yoruba_name?: string;
+    yoruba_description?: string;
     scientific_name?: string;
     type?: string;
     prep_time?: string;
     short_description?: string;
     preparation_steps?: string;
     ingredients?: { name: string; quantity: string }[];
+    image?: string | null;
     dosage?: string;
     duration?: string;
     precautions?: string;
@@ -88,11 +101,26 @@ export async function updateRemedy(
     is_featured?: boolean;
   }
 ): Promise<{ success: true } | { error: string }> {
+  if (updates.yoruba_name !== undefined && !updates.yoruba_name.trim()) {
+    return { error: "Yoruba name cannot be empty." };
+  }
+  if (
+    updates.yoruba_description !== undefined &&
+    !updates.yoruba_description.trim()
+  ) {
+    return { error: "Yoruba description cannot be empty." };
+  }
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = { ...updates };
+  if (updates.yoruba_name) updateData.yoruba_name = updates.yoruba_name.trim();
+  if (updates.yoruba_description)
+    updateData.yoruba_description = updates.yoruba_description.trim();
   if (updates.name) {
     updateData.slug = slugify(updates.name);
+  }
+  if (updates.image !== undefined) {
+    updateData.image = updates.image?.trim() ? updates.image.trim() : null;
   }
 
   const { error } = await supabase
@@ -103,6 +131,42 @@ export async function updateRemedy(
   if (error) {
     console.error("[updateRemedy] Supabase error:", error);
     return { error: error.message ?? "Failed to update remedy." };
+  }
+
+  revalidatePath("/admin/remedies");
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateRemedyDiseases(
+  remedyId: string,
+  diseaseIds: string[]
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+
+  const { error: delError } = await supabase
+    .from("disease_remedy")
+    .delete()
+    .eq("remedy_id", remedyId);
+  if (delError) {
+    console.error("[updateRemedyDiseases] delete error:", delError);
+    return { error: delError.message };
+  }
+
+  if (diseaseIds.length > 0) {
+    const links = diseaseIds.map((did) => ({
+      disease_id: did,
+      remedy_id: remedyId,
+      tag: null,
+    }));
+    const { error: insError } = await supabase
+      .from("disease_remedy")
+      .insert(links);
+    if (insError) {
+      console.error("[updateRemedyDiseases] insert error:", insError);
+      return { error: insError.message };
+    }
   }
 
   revalidatePath("/admin/remedies");

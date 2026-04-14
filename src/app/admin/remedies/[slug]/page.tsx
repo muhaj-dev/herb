@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getRemedyBySlug } from "@/lib/queries/remedies";
+import { getRemedyBySlug, getRemedyDiseaseIds } from "@/lib/queries/remedies";
 import { getDiseases } from "@/lib/queries/diseases";
 import RemedyDetailClient from "./_components/RemedyDetailClient";
 
@@ -22,6 +22,13 @@ export default async function RemedyDetailPage({
     id: d.id,
     name: d.name,
   }));
+  const linkedDiseaseIds = await getRemedyDiseaseIds(remedy.id);
 
-  return <RemedyDetailClient remedy={remedy} diseases={diseases} />;
+  return (
+    <RemedyDetailClient
+      remedy={remedy}
+      diseases={diseases}
+      linkedDiseaseIds={linkedDiseaseIds}
+    />
+  );
 }

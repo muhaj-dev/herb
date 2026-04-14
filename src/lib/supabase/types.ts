@@ -1,6 +1,7 @@
 export type Category = {
   id: string;
   name: string;
+  yoruba_name: string;
   slug: string;
   icon: string | null;
   color: string | null;
@@ -12,6 +13,8 @@ export type Category = {
 export type Condition = {
   id: string;
   name: string;
+  yoruba_name: string;
+  yoruba_description: string;
   slug: string;
   description: string | null;
   icon: string | null;
@@ -29,6 +32,8 @@ export type Condition = {
 export type Disease = {
   id: string;
   name: string;
+  yoruba_name: string;
+  yoruba_description: string;
   slug: string;
   scientific_name: string | null;
   category: string | null;
@@ -51,6 +56,8 @@ export type Disease = {
 export type Remedy = {
   id: string;
   name: string;
+  yoruba_name: string;
+  yoruba_description: string;
   scientific_name: string | null;
   slug: string;
   type: string | null;
@@ -80,6 +87,12 @@ export type ConditionRemedy = {
   remedy_id: string;
   display_order: number;
   icons: { icon: string; title: string }[];
+};
+
+export type ConditionDisease = {
+  condition_id: string;
+  disease_id: string;
+  created_at: string;
 };
 
 export type TeamMember = {
@@ -136,6 +149,7 @@ export type Database = {
       remedies: { Row: Remedy; Insert: Partial<Remedy> & { name: string; slug: string }; Update: Partial<Remedy> };
       disease_remedy: { Row: DiseaseRemedy; Insert: DiseaseRemedy; Update: Partial<DiseaseRemedy> };
       condition_remedy: { Row: ConditionRemedy; Insert: ConditionRemedy; Update: Partial<ConditionRemedy> };
+      condition_diseases: { Row: ConditionDisease; Insert: Omit<ConditionDisease, "created_at"> & { created_at?: string }; Update: Partial<ConditionDisease> };
       team_members: { Row: TeamMember; Insert: Partial<TeamMember> & { name: string }; Update: Partial<TeamMember> };
       profiles: { Row: Profile; Insert: Partial<Profile> & { name: string }; Update: Partial<Profile> };
       activity_log: { Row: ActivityLog; Insert: Partial<ActivityLog> & { action: string }; Update: Partial<ActivityLog> };

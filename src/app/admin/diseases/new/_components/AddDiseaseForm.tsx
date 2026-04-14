@@ -18,11 +18,21 @@ const toolbarButtons = [
   { icon: "image" },
 ];
 
-export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
+type ConditionOption = { id: string; name: string };
+
+export default function AddDiseaseForm({
+  remedies,
+  conditions,
+}: {
+  remedies: Remedy[];
+  conditions: ConditionOption[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState("");
+  const [yorubaName, setYorubaName] = useState("");
+  const [yorubaDescription, setYorubaDescription] = useState("");
   const [category, setCategory] = useState("");
   const [scientificName, setScientificName] = useState("");
   const [icon, setIcon] = useState("");
@@ -34,7 +44,27 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
   const [symptomInput, setSymptomInput] = useState("");
   const [selectedRemedyIds, setSelectedRemedyIds] = useState<string[]>([]);
   const [remedySearch, setRemedySearch] = useState("");
+  const [selectedConditionIds, setSelectedConditionIds] = useState<string[]>(
+    []
+  );
+  const [conditionQuery, setConditionQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const selectedConditions = conditions.filter((c) =>
+    selectedConditionIds.includes(c.id)
+  );
+  const filteredConditions = conditions
+    .filter((c) => !selectedConditionIds.includes(c.id))
+    .filter((c) =>
+      conditionQuery.trim()
+        ? c.name.toLowerCase().includes(conditionQuery.trim().toLowerCase())
+        : true
+    )
+    .slice(0, 8);
+  const toggleCondition = (id: string) =>
+    setSelectedConditionIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
 
   const addSymptom = () => {
     const trimmed = symptomInput.trim();
@@ -64,12 +94,19 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
   const handleSubmit = () => {
     setError(null);
     if (!name.trim()) return setError("Disease name is required.");
+    if (!yorubaName.trim()) return setError("Yoruba name is required.");
+    if (!yorubaDescription.trim())
+      return setError("Yoruba description is required.");
     if (!category) return setError("Please select a category.");
     if (!description.trim()) return setError("Description is required.");
+    if (selectedConditionIds.length === 0)
+      return setError("Please link this disease to at least one condition.");
 
     startTransition(async () => {
       const result = await createDisease({
         name: name.trim(),
+        yoruba_name: yorubaName.trim(),
+        yoruba_description: yorubaDescription.trim(),
         scientific_name: scientificName.trim() || undefined,
         category,
         symptoms,
@@ -79,6 +116,7 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
         status,
         is_featured: isFeatured,
         remedy_ids: selectedRemedyIds,
+        condition_ids: selectedConditionIds,
       });
 
       if ("error" in result) {
@@ -154,15 +192,50 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
                     className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
                     htmlFor="disease-name"
                   >
-                    Disease Name <span className="text-red-400">*</span>
+                    Disease Name (English) <span className="text-red-400">*</span>
                   </label>
                   <input
                     className="w-full bg-[#112214] border border-[#234829] rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all"
                     id="disease-name"
-                    placeholder="e.g. Chronic Bronchitis"
+                    placeholder="e.g. Malaria"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+
+                {/* Yoruba Name */}
+                <div>
+                  <label
+                    className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
+                    htmlFor="disease-yoruba-name"
+                  >
+                    Yoruba Name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    className="w-full bg-[#112214] border border-[#234829] rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all"
+                    id="disease-yoruba-name"
+                    placeholder="e.g. Ibà"
+                    type="text"
+                    value={yorubaName}
+                    onChange={(e) => setYorubaName(e.target.value)}
+                  />
+                </div>
+
+                {/* Yoruba Description */}
+                <div>
+                  <label
+                    className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
+                    htmlFor="disease-yoruba-description"
+                  >
+                    Yoruba Description <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    className="w-full bg-[#112214] border border-[#234829] rounded-lg p-4 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all min-h-[100px]"
+                    id="disease-yoruba-description"
+                    placeholder="Ṣàlàyé àrùn náà ní èdè Yorùbá..."
+                    value={yorubaDescription}
+                    onChange={(e) => setYorubaDescription(e.target.value)}
                   />
                 </div>
 
@@ -345,6 +418,81 @@ export default function AddDiseaseForm({ remedies }: { remedies: Remedy[] }) {
 
           {/* ── Right Column: Sidebar ── */}
           <div className="flex flex-col gap-4 sm:gap-6">
+            {/* Link Conditions (required) */}
+            <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-6">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#13ec37]">
+                    health_and_safety
+                  </span>
+                  Conditions <span className="text-red-400">*</span>
+                </h3>
+                <span className="bg-[#13ec37]/10 text-[#13ec37] text-xs font-bold px-2 py-1 rounded-full">
+                  {selectedConditionIds.length} Selected
+                </span>
+              </div>
+              <p className="text-slate-400 text-xs mb-3">
+                Every disease must belong to at least one condition.
+              </p>
+
+              {selectedConditions.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {selectedConditions.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggleCondition(c.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#13ec37]/15 border border-[#13ec37]/40 text-[#13ec37] rounded-full text-xs font-medium hover:bg-[#13ec37]/25 transition-colors"
+                    >
+                      {c.name}
+                      <span className="material-symbols-outlined text-[16px]">
+                        close
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <input
+                type="text"
+                placeholder="Search conditions..."
+                value={conditionQuery}
+                onChange={(e) => setConditionQuery(e.target.value)}
+                className="w-full bg-[#112214] border border-[#234829] rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all text-sm"
+              />
+
+              {conditions.length === 0 ? (
+                <p className="text-slate-500 text-xs mt-3">
+                  No conditions yet. Create one first.
+                </p>
+              ) : filteredConditions.length === 0 ? (
+                <p className="text-slate-500 text-xs mt-3">
+                  {conditionQuery
+                    ? "No matches."
+                    : "All conditions are linked."}
+                </p>
+              ) : (
+                <ul className="mt-3 flex flex-col gap-1 max-h-56 overflow-y-auto">
+                  {filteredConditions.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        onClick={() => toggleCondition(c.id)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#234829]/50 text-left transition-colors"
+                      >
+                        <span className="text-sm text-slate-200">
+                          {c.name}
+                        </span>
+                        <span className="material-symbols-outlined text-[18px] text-slate-400">
+                          add
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             {/* Link Remedies */}
             <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-6 sticky top-28">
               <div className="flex justify-between items-center mb-4 sm:mb-6">

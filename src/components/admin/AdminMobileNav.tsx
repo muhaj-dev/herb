@@ -3,6 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { signOut } from "@/lib/actions/auth-actions";
+import type { AdminUser } from "./AdminShell";
 
 const navLinks = [
   { href: "/admin", icon: "dashboard", label: "Dashboard" },
@@ -11,14 +13,15 @@ const navLinks = [
   { href: "/admin/conditions", icon: "health_and_safety", label: "Conditions" },
   { href: "/admin/categories", icon: "category", label: "Categories" },
   { href: "/admin/team", icon: "diversity_3", label: "Team" },
-  // { href: "/admin/users", icon: "group", label: "Users" },
   { href: "/admin/settings", icon: "settings", label: "Settings" },
 ];
 
 export default function AdminMobileNav({
+  admin,
   open,
   onClose,
 }: {
+  admin: AdminUser;
   open: boolean;
   onClose: () => void;
 }) {
@@ -28,17 +31,14 @@ export default function AdminMobileNav({
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Drawer */}
       <aside className="absolute left-0 top-0 bottom-0 w-72 flex flex-col border-r border-[#234829] bg-[#112214] shadow-2xl animate-in slide-in-from-left">
         <div className="h-full flex flex-col justify-between p-4">
           <div className="flex flex-col gap-6">
-            {/* Header with close */}
             <div className="flex items-center justify-between px-2">
               <div className="flex gap-3 items-center">
                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#234829]">
@@ -61,7 +61,6 @@ export default function AdminMobileNav({
               </button>
             </div>
 
-            {/* Navigation */}
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => {
                 const isActive =
@@ -89,23 +88,41 @@ export default function AdminMobileNav({
             </nav>
           </div>
 
-          {/* User Profile */}
-          <div className="pt-4 border-t border-[#234829]">
+          <div className="pt-4 border-t border-[#234829] flex flex-col gap-3">
             <div className="flex items-center gap-3 px-2">
-              <Image
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz6b5gX1rEfBqxEDcB-NoapXL_fJ0K0zNwkSPCK_MNJn4DXWOJG7uxmw2na8z-Ak6z5DEgSmSXJgHzWhZUYnLGlvs54NZUi6kFIJKCp5Lj1YKw-ELFyTPZCRCBsmkr1-S7CVu5Fkf-CY8hSDJOz42dN8kBVhhC2mpTDC6YmDSzWa4dASd36ckBGkZxwP-Uw_KQZy1RkNXSdyfqZcrJk5H32RjnbPBS2e2vS3yQzr3gcy2l4i_9qa0HjxKz7rneZcwERvjsu-f54vo"
-                alt="Admin Profile"
-                width={36}
-                height={36}
-                className="rounded-full object-cover ring-2 ring-[#13ec37]/30"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-white">
-                  Alex Morgan
+              {admin.avatar_url ? (
+                <Image
+                  src={admin.avatar_url}
+                  alt={admin.name}
+                  width={36}
+                  height={36}
+                  className="rounded-full object-cover ring-2 ring-[#13ec37]/30"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-[#234829] flex items-center justify-center ring-2 ring-[#13ec37]/30">
+                  <span className="text-sm font-bold text-[#13ec37]">
+                    {admin.name?.[0]?.toUpperCase() ?? "A"}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-medium text-white truncate">
+                  {admin.name}
                 </span>
-                <span className="text-xs text-slate-400">Super Admin</span>
+                <span className="text-xs text-slate-400">{admin.role}</span>
               </div>
             </div>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-[#234829]/50 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  logout
+                </span>
+                Sign out
+              </button>
+            </form>
           </div>
         </div>
       </aside>

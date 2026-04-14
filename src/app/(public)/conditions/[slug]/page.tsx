@@ -27,16 +27,19 @@ export default async function ConditionDetailPage({
     symptoms: disease.symptoms ?? [],
   };
 
-  const remedies = disease.disease_remedy.map((dr) => ({
-    id: dr.remedy.id,
-    name: dr.remedy.name,
-    scientific: dr.remedy.scientific_name ?? "",
-    slug: dr.remedy.slug,
-    type: dr.remedy.type ?? "Herbal",
-    prepTime: dr.remedy.prep_time ?? "",
-    desc: dr.remedy.description ?? dr.remedy.short_description ?? "",
-    image: dr.remedy.image,
-  }));
+  const remedies = disease.disease_remedy
+    .filter((dr) => dr.remedy && dr.remedy.is_active !== false)
+    .map((dr) => ({
+      id: dr.remedy.id,
+      name: dr.remedy.name,
+      yoruba: dr.remedy.yoruba_name ?? "",
+      scientific: dr.remedy.scientific_name ?? "",
+      slug: dr.remedy.slug,
+      type: dr.remedy.type ?? "Herbal",
+      prepTime: dr.remedy.prep_time ?? "",
+      desc: dr.remedy.description ?? dr.remedy.short_description ?? "",
+      image: dr.remedy.image,
+    }));
 
   return (
     <>
@@ -68,6 +71,16 @@ export default async function ConditionDetailPage({
                   {data.icon}
                 </span>
               </h1>
+              {disease.yoruba_name && (
+                <p className="mt-2 text-2xl text-primary italic font-semibold">
+                  {disease.yoruba_name}
+                </p>
+              )}
+              {disease.yoruba_description && (
+                <p className="mt-3 text-base text-on-surface/70 italic border-l-2 border-primary/40 pl-4 max-w-2xl">
+                  {disease.yoruba_description}
+                </p>
+              )}
               {data.description.length > 0 && (
                 <div className="mt-4 text-lg text-on-surface/50 max-w-2xl space-y-3">
                   {data.description.map((p: string, i: number) => (
@@ -154,8 +167,13 @@ export default async function ConditionDetailPage({
                         {remedy.name}
                       </h3>
                     </div>
+                    {remedy.yoruba && (
+                      <p className="text-sm text-primary font-semibold mb-1 italic">
+                        {remedy.yoruba}
+                      </p>
+                    )}
                     {remedy.scientific && (
-                      <p className="text-sm text-primary font-medium mb-3 italic">
+                      <p className="text-sm text-on-surface/50 font-medium mb-3 italic">
                         {remedy.scientific}
                       </p>
                     )}

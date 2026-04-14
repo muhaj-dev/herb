@@ -21,6 +21,7 @@ export default async function ConditionsPage() {
   const conditionsWithCategory = conditions.map((c) => ({
     ...c,
     category_name: c.category_id ? categoryMap[c.category_id] ?? "Unknown" : null,
+    disease_count: c.disease_count,
   }));
 
   return (

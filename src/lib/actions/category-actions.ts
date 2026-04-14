@@ -12,17 +12,22 @@ function slugify(text: string): string {
 
 export async function createCategory(formData: {
   name: string;
+  yoruba_name: string;
   slug?: string;
   icon?: string;
   color?: string;
   display_order?: number;
 }): Promise<{ id: string } | { error: string }> {
+  if (!formData.yoruba_name?.trim()) {
+    return { error: "Yoruba name is required." };
+  }
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("categories")
     .insert({
       name: formData.name,
+      yoruba_name: formData.yoruba_name.trim(),
       slug: formData.slug || slugify(formData.name),
       icon: formData.icon || null,
       color: formData.color || null,
@@ -45,15 +50,20 @@ export async function updateCategory(
   id: string,
   updates: {
     name?: string;
+    yoruba_name?: string;
     slug?: string;
     icon?: string;
     color?: string;
     display_order?: number;
   }
 ): Promise<{ success: true } | { error: string }> {
+  if (updates.yoruba_name !== undefined && !updates.yoruba_name.trim()) {
+    return { error: "Yoruba name cannot be empty." };
+  }
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = { ...updates };
+  if (updates.yoruba_name) updateData.yoruba_name = updates.yoruba_name.trim();
   if (updates.name && !updates.slug) {
     updateData.slug = slugify(updates.name);
   }

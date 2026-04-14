@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getCategories } from "@/lib/queries/categories";
+import { getCategoriesWithDiseaseCount } from "@/lib/queries/categories";
 import CategoryTable from "./_components/CategoryTable";
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPage() {
-  const categories = await getCategories();
+  const categories = await getCategoriesWithDiseaseCount();
 
   return (
     <>

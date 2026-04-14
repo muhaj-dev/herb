@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  getRemedyBySlug,
+  getPublicRemedyBySlug,
   getRelatedRemedies,
   getConditionsForRemedy,
 } from "@/lib/queries/remedies";
@@ -16,7 +16,7 @@ export default async function RemedyDetailPage({
 
   let remedy;
   try {
-    remedy = await getRemedyBySlug(slug);
+    remedy = await getPublicRemedyBySlug(slug);
   } catch {
     notFound();
   }
@@ -73,9 +73,19 @@ export default async function RemedyDetailPage({
             <h1 className="text-4xl sm:text-5xl font-black text-on-surface tracking-tight leading-tight">
               {remedy.name}
             </h1>
+            {remedy.yoruba_name && (
+              <p className="text-2xl text-primary font-semibold italic">
+                {remedy.yoruba_name}
+              </p>
+            )}
             {remedy.scientific_name && (
-              <p className="text-xl text-primary font-semibold italic">
+              <p className="text-lg text-on-surface/50 font-medium italic">
                 {remedy.scientific_name}
+              </p>
+            )}
+            {remedy.yoruba_description && (
+              <p className="text-base text-on-surface/70 italic border-l-2 border-primary/40 pl-4 mt-2">
+                {remedy.yoruba_description}
               </p>
             )}
 

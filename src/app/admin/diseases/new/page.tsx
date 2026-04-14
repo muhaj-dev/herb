@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAllRemedies } from "@/lib/queries/remedies";
+import { getConditions } from "@/lib/queries/conditions";
 import AddDiseaseForm from "./_components/AddDiseaseForm";
 
 export const metadata: Metadata = {
@@ -7,6 +8,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AddNewDiseasePage() {
-  const remedies = await getAllRemedies();
-  return <AddDiseaseForm remedies={remedies} />;
+  const [remedies, conditions] = await Promise.all([
+    getAllRemedies(),
+    getConditions(),
+  ]);
+  return (
+    <AddDiseaseForm
+      remedies={remedies}
+      conditions={conditions.map((c) => ({ id: c.id, name: c.name }))}
+    />
+  );
 }

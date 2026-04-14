@@ -84,7 +84,7 @@ export default async function HomePage() {
             return (
               <Link
                 key={cat.name}
-                href={`/conditions?cat=${cat.slug}`}
+                href={`/categories/${cat.slug}`}
                 className="group flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-surface-container-lowest border border-outline-variant/10 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
                 <div
