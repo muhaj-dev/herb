@@ -18,7 +18,7 @@ const footerLinks = {
   ],
 };
 
-export default function Footer() {
+export default function Footer({ siteName = "HerbalWisdom" }: { siteName?: string }) {
   return (
     <footer className="bg-surface-container-lowest border-t border-outline-variant/20 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,7 +30,7 @@ export default function Footer() {
                 <span className="material-symbols-outlined text-2xl">spa</span>
               </div>
               <span className="text-xl font-serif font-bold text-on-surface">
-                HerbalWisdom
+                {siteName}
               </span>
             </div>
             <p className="text-sm text-on-surface/50 mb-6 leading-relaxed">
@@ -69,7 +69,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-outline-variant/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-on-surface/40">
-            &copy; {new Date().getFullYear()} HerbalWisdom Inc. All rights
+            &copy; {new Date().getFullYear()} {siteName} Inc. All rights
             reserved.
           </p>
           <p className="text-xs text-on-surface/30 text-center md:text-right max-w-md italic">

@@ -13,7 +13,7 @@ const navLinks = [
   { href: "/about", label: "About Us" },
 ];
 
-export default function Header() {
+export default function Header({ siteName = "HerbalWisdom" }: { siteName?: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -41,7 +41,7 @@ export default function Header() {
                 <span className="material-symbols-outlined text-3xl">spa</span>
               </div>
               <h1 className="text-2xl font-serif font-bold tracking-tight text-primary">
-                HerbalWisdom
+                {siteName}
               </h1>
             </Link>
 

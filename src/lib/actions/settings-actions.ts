@@ -28,5 +28,6 @@ export async function updateSettings(
   }
 
   revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
   return { success: true };
 }

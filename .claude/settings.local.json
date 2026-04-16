@@ -15,7 +15,8 @@
       "Bash(nslookup fonts.googleapis.com)",
       "Bash(nslookup google.com)",
       "Bash(echo \"exit=$?\")",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(cat /c/Users/USER/Documents/Projects/herbalw/supabase/migrations/*.sql)"
     ]
   }
 }
