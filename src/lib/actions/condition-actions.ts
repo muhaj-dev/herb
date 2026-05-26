@@ -2,13 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+import { ensureUniqueSlug } from "@/lib/slug";
 
 type ConditionInput = {
   name: string;
@@ -61,6 +55,11 @@ export async function createCondition(
     return { error: "Yoruba description is required." };
   }
   const supabase = await createClient();
+  const slug = await ensureUniqueSlug(
+    supabase,
+    "conditions",
+    formData.slug || formData.name
+  );
 
   const { data, error } = await supabase
     .from("conditions")
@@ -68,7 +67,7 @@ export async function createCondition(
       name: formData.name,
       yoruba_name: formData.yoruba_name.trim(),
       yoruba_description: formData.yoruba_description.trim(),
-      slug: formData.slug || slugify(formData.name),
+      slug,
       description: formData.description || null,
       icon: formData.icon || null,
       icon_bg: formData.icon_bg || null,
@@ -119,8 +118,13 @@ export async function updateCondition(
   if (updates.yoruba_name) updateData.yoruba_name = updates.yoruba_name.trim();
   if (updates.yoruba_description)
     updateData.yoruba_description = updates.yoruba_description.trim();
-  if (updates.name && !updates.slug) {
-    updateData.slug = slugify(updates.name);
+  if ((updates.name && !updates.slug) || updates.slug) {
+    updateData.slug = await ensureUniqueSlug(
+      supabase,
+      "conditions",
+      updates.slug || updates.name!,
+      id
+    );
   }
 
   if (Object.keys(updateData).length > 0) {

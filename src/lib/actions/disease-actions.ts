@@ -2,13 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+import { ensureUniqueSlug } from "@/lib/slug";
 
 export async function createDisease(formData: {
   name: string;
@@ -35,6 +29,7 @@ export async function createDisease(formData: {
     return { error: "A disease must be linked to at least one condition." };
   }
   const supabase = await createClient();
+  const slug = await ensureUniqueSlug(supabase, "diseases", formData.name);
 
   const { data: disease, error } = await supabase
     .from("diseases")
@@ -42,7 +37,7 @@ export async function createDisease(formData: {
       name: formData.name,
       yoruba_name: formData.yoruba_name.trim(),
       yoruba_description: formData.yoruba_description.trim(),
-      slug: slugify(formData.name),
+      slug,
       scientific_name: formData.scientific_name || null,
       category: formData.category,
       symptoms: formData.symptoms,
@@ -152,7 +147,7 @@ export async function updateDisease(
   if (updates.yoruba_description)
     updateData.yoruba_description = updates.yoruba_description.trim();
   if (updates.name) {
-    updateData.slug = slugify(updates.name);
+    updateData.slug = await ensureUniqueSlug(supabase, "diseases", updates.name, id);
   }
 
   const { error } = await supabase

@@ -2,13 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+import { ensureUniqueSlug } from "@/lib/slug";
 
 export async function createRemedy(formData: {
   name: string;
@@ -35,6 +29,7 @@ export async function createRemedy(formData: {
     return { error: "Yoruba description is required." };
   }
   const supabase = await createClient();
+  const slug = await ensureUniqueSlug(supabase, "remedies", formData.name);
 
   const { data: remedy, error } = await supabase
     .from("remedies")
@@ -42,7 +37,7 @@ export async function createRemedy(formData: {
       name: formData.name,
       yoruba_name: formData.yoruba_name.trim(),
       yoruba_description: formData.yoruba_description.trim(),
-      slug: slugify(formData.name),
+      slug,
       scientific_name: formData.scientific_name || null,
       type: formData.type || null,
       prep_time: formData.prep_time || null,
@@ -117,7 +112,7 @@ export async function updateRemedy(
   if (updates.yoruba_description)
     updateData.yoruba_description = updates.yoruba_description.trim();
   if (updates.name) {
-    updateData.slug = slugify(updates.name);
+    updateData.slug = await ensureUniqueSlug(supabase, "remedies", updates.name, id);
   }
   if (updates.image !== undefined) {
     updateData.image = updates.image?.trim() ? updates.image.trim() : null;
