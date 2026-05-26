@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createCondition } from "@/lib/actions/condition-actions";
 import type { Category } from "@/lib/supabase/types";
+import MediaUpload from "@/components/admin/MediaUpload";
 
 type DiseaseOption = { id: string; name: string; status: string };
 
@@ -235,21 +236,19 @@ export default function AddConditionForm({
                   />
                 </div>
 
-                {/* Image URL */}
+                {/* Image */}
                 <div>
                   <label
                     className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
                     htmlFor="image"
                   >
-                    Image URL
+                    Image
                   </label>
-                  <input
-                    className="w-full bg-[#112214] border border-[#234829] rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all"
-                    id="image"
-                    placeholder="https://example.com/image.jpg"
-                    type="text"
+                  <MediaUpload
                     value={image}
-                    onChange={(e) => setImage(e.target.value)}
+                    onChange={setImage}
+                    accept="image"
+                    placeholder="https://example.com/image.jpg"
                   />
                 </div>
               </div>

@@ -2,19 +2,60 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, resetRateLimit } from "@/lib/rate-limit";
 
 const ADMIN_ROLES = ["Super Admin", "Editor", "Contributor"] as const;
+
+// Login limits: at most 5 attempts per 15 minutes, both per-IP and per-email.
+// Per-email prevents an attacker spraying one account from many IPs; per-IP
+// prevents one IP from spraying many accounts.
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  // Trust the first hop from common proxy headers; fall back to a constant
+  // so behind a reverse-proxy/dev we still get a stable key.
+  const fwd = h.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0]!.trim();
+  return h.get("x-real-ip") ?? "unknown";
+}
 
 export async function signIn(formData: {
   email: string;
   password: string;
   redirectTo?: string;
 }): Promise<{ error: string } | void> {
+  const email = formData.email.trim().toLowerCase();
+  const ip = await getClientIp();
+
+  // Check both buckets before touching Supabase so we don't leak timing info
+  // or burn auth quota on a flood.
+  const ipCheck = rateLimit(`login:ip:${ip}`, {
+    max: LOGIN_MAX_ATTEMPTS,
+    windowMs: LOGIN_WINDOW_MS,
+  });
+  if (!ipCheck.allowed) {
+    return {
+      error: `Too many login attempts from your network. Try again in ${ipCheck.retryAfterSeconds}s.`,
+    };
+  }
+  const emailCheck = rateLimit(`login:email:${email}`, {
+    max: LOGIN_MAX_ATTEMPTS,
+    windowMs: LOGIN_WINDOW_MS,
+  });
+  if (!emailCheck.allowed) {
+    return {
+      error: `Too many attempts for this account. Try again in ${emailCheck.retryAfterSeconds}s.`,
+    };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: formData.email,
+    email,
     password: formData.password,
   });
 
@@ -42,6 +83,11 @@ export async function signIn(formData: {
     await supabase.auth.signOut();
     return { error: "You do not have permission to access the admin area." };
   }
+
+  // Successful login — clear this user's buckets so they aren't penalised
+  // later for earlier failed attempts.
+  resetRateLimit(`login:ip:${ip}`);
+  resetRateLimit(`login:email:${email}`);
 
   revalidatePath("/", "layout");
   redirect(formData.redirectTo || "/admin");

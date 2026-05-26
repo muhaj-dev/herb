@@ -9,6 +9,7 @@ import {
   deleteRemedy,
   updateRemedyDiseases,
 } from "@/lib/actions/remedy-actions";
+import MediaUpload from "@/components/admin/MediaUpload";
 
 type Ingredient = { name: string; quantity: string };
 
@@ -457,38 +458,12 @@ export default function RemedyDetailClient({
                 Image
               </h4>
               {editing ? (
-                <>
-                  <input
-                    className={inputCls}
-                    placeholder="https://example.com/image.jpg"
-                    type="url"
-                    value={draft.image}
-                    onChange={(e) =>
-                      setDraft({ ...draft, image: e.target.value })
-                    }
-                  />
-                  <div className="mt-3 aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center">
-                    {draft.image.trim() ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={draft.image}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display =
-                            "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 text-slate-600">
-                        <span className="material-symbols-outlined text-3xl">
-                          image
-                        </span>
-                        <span className="text-xs">No image</span>
-                      </div>
-                    )}
-                  </div>
-                </>
+                <MediaUpload
+                  value={draft.image}
+                  onChange={(url) => setDraft({ ...draft, image: url })}
+                  accept="any"
+                  placeholder="https://example.com/image.jpg"
+                />
               ) : (
                 <div className="aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center relative">
                   {remedy.image ? (

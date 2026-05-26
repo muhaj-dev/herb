@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createRemedy } from "@/lib/actions/remedy-actions";
+import MediaUpload from "@/components/admin/MediaUpload";
 
 type Disease = { id: string; name: string };
 type Ingredient = { name: string; quantity: string };
@@ -472,38 +473,18 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
-                  Image URL
+                  Remedy Media
                 </label>
-                <input
-                  className={inputCls}
-                  placeholder="https://example.com/image.jpg"
-                  type="url"
+                <MediaUpload
                   value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
+                  onChange={setImageUrl}
+                  accept="any"
+                  placeholder="https://example.com/image.jpg"
+                  uploadLabel="Click or drop an image / short video"
                 />
                 <p className="text-xs text-slate-500 mt-2">
-                  Enter a direct URL to the remedy image.
+                  Upload from your device, or paste a direct URL.
                 </p>
-                <div className="mt-3 aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center">
-                  {imageUrl.trim() ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={imageUrl}
-                      alt="Remedy preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 text-slate-600">
-                      <span className="material-symbols-outlined text-3xl">
-                        image
-                      </span>
-                      <span className="text-xs">No image yet</span>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 

@@ -70,12 +70,9 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="bg-[#13ec37] hover:bg-[#13ec37]/90 disabled:opacity-50 disabled:cursor-not-allowed text-[#102213] font-bold py-3 px-6 rounded-lg shadow-lg shadow-[#13ec37]/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+        className="bg-[#13ec37] hover:bg-[#13ec37]/90 disabled:opacity-50 disabled:cursor-not-allowed text-[#102213] font-bold py-3 px-6 rounded-lg shadow-lg shadow-[#13ec37]/20 transition-all active:scale-95 flex items-center justify-center"
       >
-        <span className="material-symbols-outlined text-[20px]">
-          {isPending ? "hourglass_empty" : "login"}
-        </span>
-        {isPending ? "Signing in..." : "Sign In"}
+        {isPending ? "Loading..." : "Login"}
       </button>
     </form>
   );

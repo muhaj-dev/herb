@@ -8,6 +8,7 @@ import {
   updateTeamMember,
   deleteTeamMember,
 } from "@/lib/actions/team-actions";
+import MediaUpload from "@/components/admin/MediaUpload";
 
 export default function TeamTable({ members }: { members: TeamMember[] }) {
   const router = useRouter();
@@ -204,13 +205,14 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Image URL
+                Photo
               </label>
-              <input
-                className={inputClass}
-                placeholder="https://example.com/photo.jpg"
+              <MediaUpload
                 value={addImage}
-                onChange={(e) => setAddImage(e.target.value)}
+                onChange={setAddImage}
+                accept="image"
+                placeholder="https://example.com/photo.jpg"
+                hidePreview
               />
             </div>
           </div>

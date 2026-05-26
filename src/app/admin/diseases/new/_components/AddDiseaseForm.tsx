@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createDisease } from "@/lib/actions/disease-actions";
 import type { Remedy } from "@/lib/supabase/types";
+import MediaUpload from "@/components/admin/MediaUpload";
 
 const toolbarButtons = [
   { icon: "format_bold" },
@@ -318,15 +319,14 @@ export default function AddDiseaseForm({
                       className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
                       htmlFor="hero-image"
                     >
-                      Hero Image URL
+                      Hero Image
                     </label>
-                    <input
-                      className="w-full bg-[#112214] border border-[#234829] rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all"
-                      id="hero-image"
-                      placeholder="https://example.com/image.jpg"
-                      type="url"
+                    <MediaUpload
                       value={heroImage}
-                      onChange={(e) => setHeroImage(e.target.value)}
+                      onChange={setHeroImage}
+                      accept="image"
+                      placeholder="https://example.com/image.jpg"
+                      hidePreview
                     />
                   </div>
                 </div>
