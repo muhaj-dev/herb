@@ -14,8 +14,6 @@ type Props = {
   placeholder?: string;
   /** Label override for the upload affordance. */
   uploadLabel?: string;
-  /** Hide preview if the caller wants to render its own. */
-  hidePreview?: boolean;
 };
 
 const tabBase =
@@ -33,13 +31,26 @@ export default function MediaUpload({
   accept = "image",
   placeholder,
   uploadLabel,
-  hidePreview = false,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<"upload" | "url">("upload");
   const [error, setError] = useState<string | null>(null);
   const [uploading, startUpload] = useTransition();
   const [dragOver, setDragOver] = useState(false);
+  // Local object-URL preview shown the instant a file is picked, so the user
+  // sees the image/video immediately instead of waiting for the upload.
+  const [localPreview, setLocalPreview] = useState<{
+    url: string;
+    isVideo: boolean;
+  } | null>(null);
+
+  // Revoke any outstanding object URL when it changes or on unmount to avoid
+  // leaking blob references.
+  useEffect(() => {
+    return () => {
+      if (localPreview) URL.revokeObjectURL(localPreview.url);
+    };
+  }, [localPreview]);
 
   // If a URL is already set when we mount, default the tab to "url" so the
   // user sees the existing value rather than an empty uploader.
@@ -61,6 +72,12 @@ export default function MediaUpload({
     const file = files?.[0];
     if (!file) return;
 
+    // Show an instant local preview before the (potentially slow) upload.
+    setLocalPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev.url);
+      return { url: URL.createObjectURL(file), isVideo: file.type.startsWith("video/") };
+    });
+
     const fd = new FormData();
     fd.append("file", file);
 
@@ -68,13 +85,28 @@ export default function MediaUpload({
       const result = await uploadMedia(fd, accept);
       if ("error" in result) {
         setError(result.error);
+        // Drop the local preview so a failed upload doesn't look successful.
+        setLocalPreview((prev) => {
+          if (prev) URL.revokeObjectURL(prev.url);
+          return null;
+        });
         return;
       }
       onChange(result.url);
+      // The uploaded URL now drives the preview; release the local blob.
+      setLocalPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev.url);
+        return null;
+      });
     });
   };
 
-  const isVideoValue = !!value && (accept === "video" || looksLikeVideo(value));
+  // The remote `value` takes precedence once uploaded; otherwise fall back to
+  // the local object-URL preview while an upload is in flight.
+  const previewUrl = value || localPreview?.url || "";
+  const isVideoValue = value
+    ? accept === "video" || looksLikeVideo(value)
+    : !!localPreview?.isVideo;
 
   return (
     <div className="flex flex-col gap-3">
@@ -125,9 +157,9 @@ export default function MediaUpload({
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
+          {/* The dropzone doubles as the preview surface: once a file is picked
+              the image/video fills this box instead of showing in a box below. */}
+          <div
             onDragOver={(e) => {
               e.preventDefault();
               setDragOver(true);
@@ -138,108 +170,164 @@ export default function MediaUpload({
               setDragOver(false);
               handleFiles(e.dataTransfer.files);
             }}
-            disabled={uploading}
-            className={`w-full flex flex-col items-center justify-center gap-2 px-4 py-6 rounded-lg border-2 border-dashed transition-colors text-sm ${
+            className={`relative aspect-video w-full overflow-hidden rounded-lg border-2 border-dashed transition-colors ${
               dragOver
-                ? "border-[#13ec37] bg-[#13ec37]/10 text-white"
-                : "border-[#234829] bg-[#112214] text-slate-400 hover:border-[#13ec37]/60 hover:text-white"
-            } disabled:opacity-50 disabled:cursor-wait`}
+                ? "border-[#13ec37] bg-[#13ec37]/10"
+                : previewUrl
+                ? "border-[#234829] bg-black"
+                : "border-[#234829] bg-[#112214] hover:border-[#13ec37]/60"
+            }`}
           >
-            <span className="material-symbols-outlined text-3xl text-[#13ec37]">
-              {uploading
-                ? "hourglass_empty"
-                : accept === "video"
-                ? "video_file"
-                : accept === "any"
-                ? "perm_media"
-                : "add_photo_alternate"}
-            </span>
-            <span className="font-medium">
-              {uploading
-                ? "Uploading…"
-                : uploadLabel ??
-                  (accept === "video"
-                    ? "Click or drop a video here"
+            {previewUrl ? (
+              <>
+                {isVideoValue ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLVideoElement).style.display =
+                        "none";
+                    }}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display =
+                        "none";
+                    }}
+                  />
+                )}
+                {/* Corner actions — change / remove, kept out of the way so
+                    they don't cover video controls. */}
+                {!uploading && (
+                  <div className="absolute right-2 top-2 z-10 flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Replace"
+                      className="flex size-8 items-center justify-center rounded-md border border-[#234829] bg-[#102213]/80 text-white backdrop-blur transition-colors hover:text-[#13ec37]"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        swap_horiz
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChange("");
+                        setLocalPreview((prev) => {
+                          if (prev) URL.revokeObjectURL(prev.url);
+                          return null;
+                        });
+                      }}
+                      title="Remove"
+                      className="flex size-8 items-center justify-center rounded-md border border-[#234829] bg-[#102213]/80 text-white backdrop-blur transition-colors hover:text-red-400"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        close
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-sm text-slate-400 transition-colors hover:text-white disabled:cursor-wait disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-3xl text-[#13ec37]">
+                  {accept === "video"
+                    ? "video_file"
                     : accept === "any"
-                    ? "Click or drop an image / video here"
-                    : "Click or drop an image here")}
-            </span>
-            <span className="text-xs text-slate-500">
-              {accept === "video"
-                ? "MP4, WEBM, MOV · up to 100 MB"
-                : accept === "any"
-                ? "Image up to 10 MB · video up to 100 MB"
-                : "JPG, PNG, WEBP, GIF, AVIF · up to 10 MB"}
-            </span>
-          </button>
+                    ? "perm_media"
+                    : "add_photo_alternate"}
+                </span>
+                <span className="font-medium">
+                  {uploadLabel ??
+                    (accept === "video"
+                      ? "Click or drop a video here"
+                      : accept === "any"
+                      ? "Click or drop an image / video here"
+                      : "Click or drop an image here")}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {accept === "video"
+                    ? "MP4, WEBM, MOV · up to 100 MB"
+                    : accept === "any"
+                    ? "Image up to 10 MB · video up to 100 MB"
+                    : "JPG, PNG, WEBP, GIF, AVIF · up to 10 MB"}
+                </span>
+              </button>
+            )}
+
+            {uploading && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 bg-[#102213]/70 text-white backdrop-blur-sm">
+                <span className="material-symbols-outlined animate-spin text-3xl text-[#13ec37]">
+                  progress_activity
+                </span>
+                <span className="text-xs font-medium">Uploading…</span>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
-        <input
-          type="url"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder ?? "https://example.com/file.jpg"}
-          className={inputCls}
-        />
+        <div className="flex flex-col gap-3">
+          <input
+            type="url"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder ?? "https://example.com/file.jpg"}
+            className={inputCls}
+          />
+          {/* URL mode has no dropzone, so preview the entered URL here. */}
+          {previewUrl && (
+            <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-[#234829] bg-black">
+              {isVideoValue ? (
+                <video
+                  src={previewUrl}
+                  controls
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLVideoElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => onChange("")}
+                title="Remove"
+                className="absolute right-2 top-2 z-10 flex size-8 items-center justify-center rounded-md border border-[#234829] bg-[#102213]/80 text-white backdrop-blur transition-colors hover:text-red-400"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  close
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {error && (
         <p className="text-xs text-red-400 bg-red-900/20 border border-red-500/30 rounded-md px-3 py-2">
           {error}
         </p>
-      )}
-
-      {value && (
-        <div className="flex items-center gap-2 text-xs text-slate-400 break-all">
-          <span className="material-symbols-outlined text-[16px] text-[#13ec37]">
-            check_circle
-          </span>
-          <span className="truncate flex-1" title={value}>
-            {value}
-          </span>
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="text-slate-500 hover:text-red-400 transition-colors"
-            title="Remove"
-          >
-            <span className="material-symbols-outlined text-[16px]">close</span>
-          </button>
-        </div>
-      )}
-
-      {!hidePreview && (
-        <div className="aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center">
-          {value ? (
-            isVideoValue ? (
-              <video
-                src={value}
-                controls
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.currentTarget as HTMLVideoElement).style.display = "none";
-                }}
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={value}
-                alt="Preview"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-            )
-          ) : (
-            <div className="flex flex-col items-center gap-1 text-slate-600">
-              <span className="material-symbols-outlined text-3xl">
-                {accept === "video" ? "movie" : "image"}
-              </span>
-              <span className="text-xs">No {accept === "video" ? "video" : "media"} yet</span>
-            </div>
-          )}
-        </div>
       )}
     </div>
   );

@@ -129,6 +129,7 @@ export async function updateDisease(
     description?: string[];
     symptoms?: string[];
     tags?: string[];
+    hero_image?: string;
   }
 ): Promise<{ success: true } | { error: string }> {
   if (updates.yoruba_name !== undefined && !updates.yoruba_name.trim()) {

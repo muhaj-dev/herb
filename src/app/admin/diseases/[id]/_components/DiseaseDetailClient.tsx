@@ -10,6 +10,7 @@ import {
   updateDiseaseConditions,
   deleteDisease,
 } from "@/lib/actions/disease-actions";
+import MediaUpload from "@/components/admin/MediaUpload";
 
 const categoryOptions = [
   "respiratory",
@@ -94,6 +95,7 @@ export default function DiseaseDetailClient({
     description: disease.description ?? [],
     symptoms: disease.symptoms ?? [],
     tags: disease.tags ?? [],
+    hero_image: disease.hero_image ?? "",
   });
   const [selectedConditionIds, setSelectedConditionIds] =
     useState<string[]>(linkedConditionIds);
@@ -138,6 +140,7 @@ export default function DiseaseDetailClient({
       description: disease.description ?? [],
       symptoms: disease.symptoms ?? [],
       tags: disease.tags ?? [],
+      hero_image: disease.hero_image ?? "",
     });
     setSelectedRemedyIds(
       disease.disease_remedy?.map((dr) => dr.remedy.id).filter(Boolean) ?? []
@@ -172,6 +175,7 @@ export default function DiseaseDetailClient({
           description: draft.description,
           symptoms: draft.symptoms,
           tags: draft.tags,
+          hero_image: draft.hero_image,
         });
         if ("error" in res) {
           setError(res.error);
@@ -238,6 +242,9 @@ export default function DiseaseDetailClient({
   const linkedRemedies =
     disease.disease_remedy?.map((dr) => dr.remedy).filter(Boolean) ?? [];
 
+  // While editing, the banner reflects the draft image so changes preview live.
+  const heroImageSrc = editing ? draft.hero_image : disease.hero_image;
+
   return (
     <>
       {/* ── Top Bar ── */}
@@ -296,104 +303,145 @@ export default function DiseaseDetailClient({
           </div>
         )}
 
-        {/* ── Hero Header ── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3 sm:gap-6">
-            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl bg-[#1a3320] border border-[#234829] flex items-center justify-center shrink-0 overflow-hidden relative">
-              {disease.hero_image && (
-                <div
-                  className="absolute inset-0 bg-cover bg-center opacity-80"
-                  style={{ backgroundImage: `url('${disease.hero_image}')`, filter: "grayscale(50%) brightness(0.6)" }}
-                />
-              )}
-              <span className="material-symbols-outlined text-2xl sm:text-4xl text-white z-10">
+        {/* ── Hero Banner ── */}
+        <div className="relative w-full h-52 sm:h-72 lg:h-[22rem] rounded-2xl overflow-hidden border border-[#234829] bg-[#1a3320] group/hero">
+          {heroImageSrc ? (
+            <Image
+              src={heroImageSrc}
+              alt={current.name}
+              fill
+              priority
+              sizes="(max-width: 1200px) 100vw, 1200px"
+              className="object-cover transition-transform duration-700 ease-out group-hover/hero:scale-[1.03]"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1a3320] via-[#14271a] to-[#0d1b10]">
+              <span className="material-symbols-outlined text-7xl text-[#13ec37]/30">
                 {disease.icon ?? "local_hospital"}
               </span>
             </div>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                {editing ? (
-                  <input
-                    value={draft.name}
-                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                    className="text-xl sm:text-3xl font-bold text-white tracking-tight bg-transparent border-b-2 border-[#13ec37]/50 focus:border-[#13ec37] focus:outline-none pb-1"
-                  />
-                ) : (
-                  <h2 className="text-xl sm:text-3xl font-bold text-white tracking-tight">{current.name}</h2>
-                )}
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
-                  {current.status}
-                </span>
+          )}
+
+          {/* Legibility scrim — keeps overlaid text readable on any image */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a160d] via-[#0a160d]/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a160d]/40 to-transparent" />
+
+          {/* Top-right actions float over the banner */}
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex gap-2 sm:gap-3">
+            {!editing ? (
+              <>
+                <button className="px-3 sm:px-4 py-2 rounded-lg bg-[#102213]/70 backdrop-blur-sm hover:bg-[#1a3320] text-slate-200 hover:text-white text-sm font-medium transition-colors border border-white/10 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">history</span>
+                  <span className="hidden sm:inline">History</span>
+                </button>
+                <button
+                  onClick={startEdit}
+                  className="px-4 sm:px-5 py-2 rounded-lg bg-[#13ec37] hover:bg-[#13ec37]/90 text-[#102213] text-sm font-bold transition-colors flex items-center gap-2 shadow-lg shadow-[#13ec37]/20"
+                >
+                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                  <span className="hidden sm:inline">Edit Entry</span>
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-2 lg:hidden">
+                <button onClick={cancelEdit} disabled={isPending} className="px-4 py-2 rounded-lg bg-[#102213]/70 backdrop-blur-sm text-slate-200 hover:text-white text-sm font-medium border border-white/10">
+                  Cancel
+                </button>
+                <button onClick={saveEdit} disabled={isPending} className="px-5 py-2 rounded-lg bg-[#13ec37] hover:bg-[#13ec37]/90 disabled:opacity-50 text-[#102213] text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#13ec37]/20">
+                  <span className="material-symbols-outlined text-[18px]">{isPending ? "hourglass_empty" : "save"}</span>
+                  {isPending ? "Saving..." : "Save"}
+                </button>
               </div>
+            )}
+          </div>
+
+          {/* Category + icon chip, top-left */}
+          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2">
+            <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#102213]/70 backdrop-blur-sm border border-white/10 text-[#13ec37]">
+              <span className="material-symbols-outlined text-[20px]">{disease.icon ?? "local_hospital"}</span>
+            </span>
+            {current.category && (
+              <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#102213]/70 backdrop-blur-sm border border-white/10 text-slate-200 capitalize">
+                {current.category}
+              </span>
+            )}
+          </div>
+
+          {/* Title + meta overlaid at the bottom */}
+          <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 lg:p-7">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1.5">
               {editing ? (
-                <div className="space-y-2 mt-2 max-w-xl">
-                  <input
-                    value={draft.yoruba_name}
-                    placeholder="Yoruba name (required)"
-                    onChange={(e) =>
-                      setDraft({ ...draft, yoruba_name: e.target.value })
-                    }
-                    className={`${inputCls} italic`}
-                  />
-                  <textarea
-                    value={draft.yoruba_description}
-                    placeholder="Yoruba description (required)"
-                    rows={2}
-                    onChange={(e) =>
-                      setDraft({ ...draft, yoruba_description: e.target.value })
-                    }
-                    className={`${inputCls} italic resize-none`}
-                  />
-                </div>
+                <input
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  className="text-2xl sm:text-4xl font-bold text-white tracking-tight bg-[#102213]/60 backdrop-blur-sm rounded-lg px-3 py-1 border border-white/10 focus:border-[#13ec37] focus:outline-none"
+                />
               ) : (
-                disease.yoruba_name && (
-                  <p className="text-[#13ec37] text-sm italic mt-1">
-                    {disease.yoruba_name}
-                  </p>
-                )
+                <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                  {current.name}
+                </h2>
               )}
-              <p className="text-slate-400 text-xs sm:text-sm max-w-2xl">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-400/30 backdrop-blur-sm">
+                {current.status}
+              </span>
+            </div>
+
+            {editing ? (
+              <div className="space-y-2 mt-2 max-w-xl">
+                <input
+                  value={draft.yoruba_name}
+                  placeholder="Yoruba name (required)"
+                  onChange={(e) => setDraft({ ...draft, yoruba_name: e.target.value })}
+                  className="w-full bg-[#102213]/70 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all text-sm italic"
+                />
+                <textarea
+                  value={draft.yoruba_description}
+                  placeholder="Yoruba description (required)"
+                  rows={2}
+                  onChange={(e) => setDraft({ ...draft, yoruba_description: e.target.value })}
+                  className="w-full bg-[#102213]/70 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all text-sm italic resize-none"
+                />
+              </div>
+            ) : (
+              disease.yoruba_name && (
+                <p className="text-[#13ec37] text-sm sm:text-base italic drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+                  {disease.yoruba_name}
+                </p>
+              )
+            )}
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 sm:mt-3">
+              <p className="text-slate-300 text-xs sm:text-sm">
                 ID: {disease.id.slice(0, 8).toUpperCase()} &bull; Created: {formatDate(disease.created_at)}
               </p>
-              <div className="flex gap-3 sm:gap-4 mt-2 sm:mt-4">
-                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
-                  <span className="material-symbols-outlined text-[16px]">visibility</span>
-                  {disease.views_count ?? 0} Views
-                </div>
-                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
-                  <span className="material-symbols-outlined text-[16px]">bookmark</span>
-                  {disease.saves_count ?? 0} Saves
-                </div>
+              <span className="hidden sm:block w-px h-3 bg-white/20" />
+              <div className="flex items-center gap-1.5 text-slate-300 text-xs sm:text-sm">
+                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                {disease.views_count ?? 0} Views
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-300 text-xs sm:text-sm">
+                <span className="material-symbols-outlined text-[16px]">bookmark</span>
+                {disease.saves_count ?? 0} Saves
               </div>
             </div>
           </div>
-          {!editing && (
-            <div className="flex gap-3">
-              <button className="px-4 py-2 rounded-lg bg-[#1a3320] hover:bg-[#234829] text-slate-300 hover:text-white text-sm font-medium transition-colors border border-[#234829] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">history</span>
-                History
-              </button>
-              <button
-                onClick={startEdit}
-                className="px-5 py-2 rounded-lg bg-[#13ec37] hover:bg-[#13ec37]/90 text-[#102213] text-sm font-bold transition-colors flex items-center gap-2 shadow-lg shadow-[#13ec37]/20"
-              >
-                <span className="material-symbols-outlined text-[18px]">edit</span>
-                Edit Entry
-              </button>
-            </div>
-          )}
-          {editing && (
-            <div className="flex gap-3 lg:hidden">
-              <button onClick={cancelEdit} disabled={isPending} className="px-4 py-2 rounded-lg text-slate-300 hover:text-white text-sm font-medium border border-[#234829]">
-                Cancel
-              </button>
-              <button onClick={saveEdit} disabled={isPending} className="px-5 py-2 rounded-lg bg-[#13ec37] hover:bg-[#13ec37]/90 disabled:opacity-50 text-[#102213] text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#13ec37]/20">
-                <span className="material-symbols-outlined text-[18px]">{isPending ? "hourglass_empty" : "save"}</span>
-                {isPending ? "Saving..." : "Save"}
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* ── Hero Image editor (edit mode only) ── */}
+        {editing && (
+          <div className="bg-[#1a3320] border border-[#234829] rounded-xl p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#13ec37]">image</span>
+              Hero Image
+            </h3>
+            <MediaUpload
+              value={draft.hero_image}
+              onChange={(url) => setDraft({ ...draft, hero_image: url })}
+              accept="image"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+        )}
 
         {/* ── Content Grid ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">

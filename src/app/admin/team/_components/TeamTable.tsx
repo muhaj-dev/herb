@@ -212,7 +212,6 @@ export default function TeamTable({ members }: { members: TeamMember[] }) {
                 onChange={setAddImage}
                 accept="image"
                 placeholder="https://example.com/photo.jpg"
-                hidePreview
               />
             </div>
           </div>

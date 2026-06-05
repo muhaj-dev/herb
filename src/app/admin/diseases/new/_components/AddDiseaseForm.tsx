@@ -326,7 +326,6 @@ export default function AddDiseaseForm({
                       onChange={setHeroImage}
                       accept="image"
                       placeholder="https://example.com/image.jpg"
-                      hidePreview
                     />
                   </div>
                 </div>
