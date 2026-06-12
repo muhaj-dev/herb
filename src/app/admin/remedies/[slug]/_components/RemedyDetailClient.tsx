@@ -22,6 +22,7 @@ type RemedyData = {
   scientific_name?: string | null;
   type?: string | null;
   image?: string | null;
+  video_url?: string | null;
   description?: string | null;
   short_description?: string | null;
   dosage?: string | null;
@@ -68,6 +69,7 @@ export default function RemedyDetailClient({
     short_description: remedy.short_description ?? "",
     preparation_steps: remedy.preparation_steps ?? "",
     image: remedy.image ?? "",
+    video_url: remedy.video_url ?? "",
     dosage: remedy.dosage ?? "",
     duration: remedy.duration ?? "",
     precautions: remedy.precautions ?? "",
@@ -114,6 +116,7 @@ export default function RemedyDetailClient({
         short_description: draft.short_description.trim() || undefined,
         preparation_steps: draft.preparation_steps.trim() || undefined,
         image: draft.image.trim() ? draft.image.trim() : null,
+        video_url: draft.video_url.trim() ? draft.video_url.trim() : null,
         dosage: draft.dosage.trim() || undefined,
         duration: draft.duration.trim() || undefined,
         precautions: draft.precautions.trim() || undefined,
@@ -458,31 +461,66 @@ export default function RemedyDetailClient({
                 Image
               </h4>
               {editing ? (
-                <MediaUpload
-                  value={draft.image}
-                  onChange={(url) => setDraft({ ...draft, image: url })}
-                  accept="any"
-                  placeholder="https://example.com/image.jpg"
-                />
-              ) : (
-                <div className="aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center relative">
-                  {remedy.image ? (
-                    <Image
-                      src={remedy.image}
-                      alt={remedy.name}
-                      fill
-                      sizes="300px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 text-slate-600">
-                      <span className="material-symbols-outlined text-3xl">
-                        image
+                <>
+                  <MediaUpload
+                    value={draft.image}
+                    onChange={(url) => setDraft({ ...draft, image: url })}
+                    accept="any"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <div className="mt-4">
+                    <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Video Link
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-[20px]">
+                        play_circle
                       </span>
-                      <span className="text-xs">No image</span>
+                      <input
+                        className={`${inputCls} pl-10`}
+                        placeholder="https://youtube.com/watch?v=..."
+                        type="url"
+                        value={draft.video_url}
+                        onChange={(e) => setDraft({ ...draft, video_url: e.target.value })}
+                      />
                     </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Shown to users as a &quot;Watch video&quot; button under the image.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="aspect-video w-full rounded-lg bg-[#112214] border border-[#234829] overflow-hidden flex items-center justify-center relative">
+                    {remedy.image ? (
+                      <Image
+                        src={remedy.image}
+                        alt={remedy.name}
+                        fill
+                        sizes="300px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-slate-600">
+                        <span className="material-symbols-outlined text-3xl">
+                          image
+                        </span>
+                        <span className="text-xs">No image</span>
+                      </div>
+                    )}
+                  </div>
+                  {remedy.video_url && (
+                    <a
+                      href={remedy.video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#13ec37] hover:bg-[#13ec37]/90 text-[#102213] text-sm font-bold transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">play_circle</span>
+                      Watch video
+                    </a>
                   )}
-                </div>
+                </>
               )}
             </div>
 

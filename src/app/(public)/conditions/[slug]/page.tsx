@@ -23,6 +23,8 @@ export default async function ConditionDetailPage({
     name: disease.name,
     category: disease.category ?? "",
     icon: disease.icon ?? "local_hospital",
+    image: disease.hero_image ?? null,
+    video_url: disease.video_url ?? null,
     description: Array.isArray(disease.description) ? disease.description : [],
     symptoms: disease.symptoms ?? [],
   };
@@ -89,6 +91,35 @@ export default async function ConditionDetailPage({
                 </div>
               )}
             </div>
+
+            {/* Hero Image + Watch Video */}
+            {(data.image || data.video_url) && (
+              <div className="w-full md:w-80 lg:w-96 shrink-0 flex flex-col gap-3">
+                {data.image && (
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-surface-container-low">
+                    <Image
+                      src={data.image}
+                      alt={data.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 24rem"
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                )}
+                {data.video_url && (
+                  <a
+                    href={data.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-fit px-5 py-2.5 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">play_circle</span>
+                    Watch video
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>

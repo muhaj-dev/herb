@@ -38,6 +38,7 @@ export default function AddDiseaseForm({
   const [scientificName, setScientificName] = useState("");
   const [icon, setIcon] = useState("");
   const [heroImage, setHeroImage] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
@@ -114,6 +115,7 @@ export default function AddDiseaseForm({
         description: description.trim(),
         icon: icon.trim() || undefined,
         hero_image: heroImage.trim() || undefined,
+        video_url: videoUrl.trim() || undefined,
         status,
         is_featured: isFeatured,
         remedy_ids: selectedRemedyIds,
@@ -328,6 +330,32 @@ export default function AddDiseaseForm({
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
+                </div>
+
+                {/* Video Link */}
+                <div>
+                  <label
+                    className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2"
+                    htmlFor="video-url"
+                  >
+                    Video Link
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-[20px]">
+                      play_circle
+                    </span>
+                    <input
+                      className="w-full bg-[#112214] border border-[#234829] rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all"
+                      id="video-url"
+                      placeholder="https://youtube.com/watch?v=..."
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Optional. Shown to users as a &quot;Watch video&quot; button under the image.
+                  </p>
                 </div>
 
                 {/* Common Symptoms */}

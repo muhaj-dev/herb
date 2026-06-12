@@ -26,6 +26,7 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
     { name: "", quantity: "" },
   ]);
   const [imageUrl, setImageUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [diseaseQuery, setDiseaseQuery] = useState("");
   const [dosage, setDosage] = useState("");
   const [duration, setDuration] = useState("");
@@ -75,6 +76,7 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
         preparation_steps: preparationSteps.trim() || undefined,
         ingredients: ingredients.filter((ig) => ig.name.trim()),
         image: imageUrl.trim() || undefined,
+        video_url: videoUrl.trim() || undefined,
         dosage: dosage.trim() || undefined,
         duration: duration.trim() || undefined,
         precautions: precautions.trim() || undefined,
@@ -484,6 +486,26 @@ export default function AddRemedyForm({ diseases }: { diseases: Disease[] }) {
                 />
                 <p className="text-xs text-slate-500 mt-2">
                   Upload from your device, or paste a direct URL.
+                </p>
+              </div>
+              <div className="mt-4">
+                <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
+                  Video Link
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-[20px]">
+                    play_circle
+                  </span>
+                  <input
+                    className={`${inputCls} pl-10`}
+                    placeholder="https://youtube.com/watch?v=..."
+                    type="url"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Optional. Shown to users as a &quot;Watch video&quot; button under the image.
                 </p>
               </div>
             </div>

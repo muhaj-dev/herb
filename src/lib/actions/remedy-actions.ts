@@ -16,6 +16,7 @@ export async function createRemedy(formData: {
   preparation_steps?: string;
   ingredients?: { name: string; quantity: string }[];
   image?: string;
+  video_url?: string;
   dosage?: string;
   duration?: string;
   precautions?: string;
@@ -46,6 +47,7 @@ export async function createRemedy(formData: {
       preparation_steps: formData.preparation_steps || null,
       ingredients: formData.ingredients || [],
       image: formData.image || null,
+      video_url: formData.video_url || null,
       dosage: formData.dosage || null,
       duration: formData.duration || null,
       precautions: formData.precautions || null,
@@ -89,6 +91,7 @@ export async function updateRemedy(
     preparation_steps?: string;
     ingredients?: { name: string; quantity: string }[];
     image?: string | null;
+    video_url?: string | null;
     dosage?: string;
     duration?: string;
     precautions?: string;
@@ -116,6 +119,9 @@ export async function updateRemedy(
   }
   if (updates.image !== undefined) {
     updateData.image = updates.image?.trim() ? updates.image.trim() : null;
+  }
+  if (updates.video_url !== undefined) {
+    updateData.video_url = updates.video_url?.trim() ? updates.video_url.trim() : null;
   }
 
   const { error } = await supabase

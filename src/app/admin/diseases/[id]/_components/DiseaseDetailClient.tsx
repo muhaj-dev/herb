@@ -42,6 +42,7 @@ type Disease = {
   scientific_name?: string | null;
   icon?: string | null;
   hero_image?: string | null;
+  video_url?: string | null;
   status: string;
   category?: string | null;
   severity?: number | null;
@@ -96,6 +97,7 @@ export default function DiseaseDetailClient({
     symptoms: disease.symptoms ?? [],
     tags: disease.tags ?? [],
     hero_image: disease.hero_image ?? "",
+    video_url: disease.video_url ?? "",
   });
   const [selectedConditionIds, setSelectedConditionIds] =
     useState<string[]>(linkedConditionIds);
@@ -141,6 +143,7 @@ export default function DiseaseDetailClient({
       symptoms: disease.symptoms ?? [],
       tags: disease.tags ?? [],
       hero_image: disease.hero_image ?? "",
+      video_url: disease.video_url ?? "",
     });
     setSelectedRemedyIds(
       disease.disease_remedy?.map((dr) => dr.remedy.id).filter(Boolean) ?? []
@@ -176,6 +179,7 @@ export default function DiseaseDetailClient({
           symptoms: draft.symptoms,
           tags: draft.tags,
           hero_image: draft.hero_image,
+          video_url: draft.video_url,
         });
         if ("error" in res) {
           setError(res.error);
@@ -440,6 +444,27 @@ export default function DiseaseDetailClient({
               accept="image"
               placeholder="https://example.com/image.jpg"
             />
+
+            <div className="mt-4">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
+                Video Link
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-[20px]">
+                  play_circle
+                </span>
+                <input
+                  className="w-full bg-[#112214] border border-[#234829] rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#13ec37] focus:ring-1 focus:ring-[#13ec37] transition-all text-sm"
+                  placeholder="https://youtube.com/watch?v=..."
+                  type="url"
+                  value={draft.video_url}
+                  onChange={(e) => setDraft({ ...draft, video_url: e.target.value })}
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Optional. Shown to users as a &quot;Watch video&quot; button under the image.
+              </p>
+            </div>
           </div>
         )}
 

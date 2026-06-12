@@ -41,6 +41,7 @@ export type Disease = {
   symptoms: string[];
   icon: string | null;
   hero_image: string | null;
+  video_url: string | null;
   status: "Active" | "Draft" | "Archived";
   severity: number;
   severity_label: string | null;
@@ -65,6 +66,7 @@ export type Remedy = {
   description: string | null;
   short_description: string | null;
   image: string | null;
+  video_url: string | null;
   dosage: string | null;
   duration: string | null;
   precautions: string | null;

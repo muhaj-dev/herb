@@ -103,6 +103,19 @@ export default async function RemedyDetailPage({
                 />
               </div>
             )}
+
+            {/* Watch Video */}
+            {remedy.video_url && (
+              <a
+                href={remedy.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 w-fit px-5 py-2.5 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">play_circle</span>
+                Watch video
+              </a>
+            )}
           </div>
 
           {/* Content Sections */}

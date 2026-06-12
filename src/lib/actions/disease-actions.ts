@@ -14,6 +14,7 @@ export async function createDisease(formData: {
   description: string;
   icon?: string;
   hero_image?: string;
+  video_url?: string;
   status: boolean;
   is_featured: boolean;
   remedy_ids?: string[];
@@ -46,6 +47,7 @@ export async function createDisease(formData: {
         : [],
       icon: formData.icon || null,
       hero_image: formData.hero_image || null,
+      video_url: formData.video_url || null,
       status: formData.status ? "Active" : "Draft",
       is_featured: formData.is_featured,
     } as Record<string, unknown>)
@@ -130,6 +132,7 @@ export async function updateDisease(
     symptoms?: string[];
     tags?: string[];
     hero_image?: string;
+    video_url?: string | null;
   }
 ): Promise<{ success: true } | { error: string }> {
   if (updates.yoruba_name !== undefined && !updates.yoruba_name.trim()) {
@@ -149,6 +152,9 @@ export async function updateDisease(
     updateData.yoruba_description = updates.yoruba_description.trim();
   if (updates.name) {
     updateData.slug = await ensureUniqueSlug(supabase, "diseases", updates.name, id);
+  }
+  if (updates.video_url !== undefined) {
+    updateData.video_url = updates.video_url?.trim() ? updates.video_url.trim() : null;
   }
 
   const { error } = await supabase
